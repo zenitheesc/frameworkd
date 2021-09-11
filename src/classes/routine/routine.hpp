@@ -7,11 +7,12 @@
 */
 
 #pragma once
+#include <string>
 
-typedef enum state_t { 
+typedef enum { 
 	MISSINGDEPENDENCIES = 0, UNINITIALIZED, INITIALIZED, RUNNING, STOPED, DEAD
 
-};
+} stateT;
 
 class IRoutine {
 	public:
