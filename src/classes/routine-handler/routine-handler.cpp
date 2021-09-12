@@ -11,7 +11,6 @@ void routineModule(IRoutine& routine, Status& status) {
 	routine.onLoad();
 	status.mtx.lock();
 	status.state = Status::RUNNING;
-	status.mtx.unlock();
 	while(status.state == Status::STOPED){
 		status.mtx.unlock();
 		routine.loop();
