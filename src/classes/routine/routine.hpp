@@ -8,11 +8,17 @@
 
 #pragma once
 #include <string>
+#include <mutex>
 
-typedef enum { 
-	MISSINGDEPENDENCIES = 0, UNINITIALIZED, INITIALIZED, RUNNING, STOPED, DEAD
+class Status {
+	public:
+		enum stateT { 
+			MISSINGDEPENDENCIES = 0, UNINITIALIZED, INITIALIZED, RUNNING, STOPED, DEAD
 
-} stateT;
+		};
+		stateT state;
+		std::mutex mtx;
+};
 
 class IRoutine {
 	public:
