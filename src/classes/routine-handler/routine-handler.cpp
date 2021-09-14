@@ -19,13 +19,18 @@ void routineModule(IRoutine& routine, Status& status) {
 	status.mtx.unlock();
 }
 
-RoutineHandler::RoutineHandler(IRoutine& routine, nlohmann::json dependecies, nlohmann::json currentDependecies) {
+RoutineHandler::RoutineHandler(IRoutine& routine, nlohmann::json& configs) {
 	(*this->routine) = routine;
 	this->status.mtx.lock();
-	this->status.state = Status::UNINITIALIZED;
+	this->status.state = Status::MISSINGDEPENDENCIES;
 	this->status.mtx.unlock();
-	(*this->dependecies) = dependecies;
-	this->currentDependecies = currentDependecies;
+	this->depsRefState = configs["dependencies"];
+	this->depsCrntState = configs["dependencies"];
+	for(nlohmann::json& dependencie : this->depsCrntState) {
+		dependencie["status"] = Status::MISSINGDEPENDENCIES;
+	}
+	this->info.data = configs;
+	
 }
 
 RoutineHandler::~RoutineHandler() {
@@ -47,21 +52,44 @@ void RoutineHandler::stop(void) {
 	innerThread.join();
 	status.mtx.lock();
 	status.state = Status::DEAD;
-	status.mtx.unlock();	
+	status.mtx.unlock();
 }
 
 nlohmann::json RoutineHandler::getStatus(void) {
-	//DO NOTHING
-	nlohmann::json myjson;
-	myjson["pi"] = 3.14;
-	return myjson;
+	std::lock_guard<std::mutex> lck(info.occupied);
+	status.mtx.lock();
+	info.data["state"] = status.state;
+	status.mtx.unlock();
+	return info.data;
 
 }
 
-nlohmann::json RoutineHandler::update(nlohmann::json& updateList) {
-	//DO NOTHING
-	nlohmann::json myjson;
-	myjson["pi"] = 3.14;
-	return myjson;
+nlohmann::json RoutineHandler::update(void) {
+	int missingDeps = depsRefState["lenght"];
+	for(int i = 0; i < depsRefState["lenght"]; i++) {
+		using namespace nlohmann;
+		const json& dependencie = depsCrntState[i];
+		const json& dependencieRef = depsRefState[i];
+		if(dependencie["status"] == dependencieRef["status"]) {
+			missingDeps--;
+		}
+	}
+	if(!missingDeps) {
+		run();
+		nlohmann::json changes = getStatus();
+		return (nlohmann::json) {{{"changed", true}}, changes};
+	}
+	status.mtx.lock();
+	if(status.state == Status::RUNNING) {
+		status.mtx.unlock();
+		stop();
+		status.mtx.lock();
+		status.state = Status::MISSINGDEPENDENCIES;
+		status.mtx.unlock();
+		nlohmann::json changes = getStatus();
+		return (nlohmann::json) {{{"changed", true}}, changes};
+	}
+	status.mtx.unlock();
+	return (nlohmann::json) {{"changed", false}};
 }
 
