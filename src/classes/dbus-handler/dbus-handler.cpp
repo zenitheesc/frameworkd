@@ -1,65 +1,149 @@
 #include "./dbus-handler.hpp"
 
-#include <array>
-#include <vector>
 
-DBusHandler::DBusHandler(std::string serviceName, nlohmann::json DBusObjectConfig) {
-    std::string objectNameTemp = DBusObjectConfig["id"];
-    interfaceName = objectPath = serviceName + "." + objectNameTemp;
 
-    std::replace(objectPath.begin(), objectPath.end(), ".", "/");
-    objectPath = "/" + objectPath;
-
-    DBusObject = sdbus::createObject(*connection, objectPath);
-    SDbusEmitter = DBusObject.get();
-
-    std::vector<std::string> signalsNames = DBusObjectConfig["emittedSignals"];
-    registerSignals(signalsNames);
+DBusHandler::DBusHandler(std::string serviceName) {
+    _serviceName = "org.frameworkd." + serviceName;
+    _connection = sdbus::createSystemBusConnection(_serviceName);
 }
 
-/**
- * 
- *@todo 
- * Adicionar regex para o endpoint name /word/word/word...
- * Adicionar callMethod async(?)
- */
-nlohmann::json DBusHandler::callMethod(std::string endpointName, nlohmann::json arg) {
-    if (DBusProxys.count(endpointName) != true) throw std::invalid_argument("endpoint not found");
+sdbus::IObject* DBusHandler::addObject(std::string objectPath) {
+    _DBusObjects[objectPath] = sdbus::createObject(*_connection, objectPath);
+    return _DBusObjects[objectPath].get();
+}
 
-    std::vector<std::uint8_t> response;
-    std::string destinationInterface = endpointName;
+sdbus::IProxy* DBusHandler::addProxy(std::string destinationService, std::string objectPath) {
 
-    destinationInterface.erase(0, 1);
-    std::replace(destinationInterface.begin(), destinationInterface.end(), "/", ".");
+    std::string uniqueId = destinationService + objectPath;
+    
+    _DBusProxys[uniqueId] = sdbus::createProxy(destinationService, objectPath);
 
-    auto method = DBusProxys[endpointName]->createMethodCall(interfaceName, endpointName);
+    return _DBusProxys[uniqueId].get();
+}
+
+void DBusHandler::registerMethod(PathHandler::dbusPath path, DBusCallback callback) {
+
+    auto exists = _DBusObjects.find(path.objectPath);
+    auto object = (exists != _DBusObjects.end())? exists->second.get() : addObject(path.objectPath);
+
+    auto wrapper = [&callback](sdbus::MethodCall call) {
+
+        std::vector<u_int8_t> bson;
+        call >> bson;
+
+        nlohmann::json answer = callback(nlohmann::json::from_bson(bson));
+
+        auto reply = call.createReply();
+
+        reply << nlohmann::json::to_bson(answer);
+
+        reply.send();
+
+    };
+
+    object->registerMethod(path.interface, path.functionality, "ai", "ai", wrapper);
+
+}
+
+void DBusHandler::subscribeToSignal(PathHandler::dbusPath path, DBusVoidCallback callback) {
+
+    std::string uniqueId = path.service + path.objectPath;
+
+    auto exists = _DBusProxys.find(uniqueId);
+    auto proxy = (exists != _DBusProxys.end())? exists->second.get() : addProxy(path.service, path.objectPath);
+
+    auto wrapper = [&callback](sdbus::Signal& signal) {
+
+        std::vector<u_int8_t> bson;
+        signal >> bson;
+
+        callback(nlohmann::json::from_bson(bson));
+
+    };
+
+    proxy->registerSignalHandler(path.interface, path.functionality, wrapper);
+
+}
+
+void DBusHandler::registerSignal(PathHandler::dbusPath path) {
+    
+    auto exists = _DBusObjects.find(path.objectPath);
+    auto object = (exists != _DBusObjects.end())? exists->second.get() : addObject(path.objectPath);
+
+    object->registerSignal(path.interface, path.functionality, "ai");
+
+}
+
+nlohmann::json DBusHandler::callMethod(PathHandler::dbusPath path, nlohmann::json arg) {
+    if(!_started) return; //add error
+
+    std::string uniqueId = path.service + path.objectPath;
+
+    auto exists = _DBusProxys.find(uniqueId);
+    auto proxy = (exists != _DBusProxys.end())? exists->second.get() : addProxy(path.service, path.objectPath);
+
+    auto method = proxy->createMethodCall(path.interface, path.functionality);
+
     method << nlohmann::json::to_bson(arg);
-    auto reply = DBusProxys[endpointName]->callMethod(method);
 
-    reply >> response;
+    auto reply = proxy->callMethod(method);
 
-    return nlohmann::json::from_bson(response);
+    std::vector<u_int8_t> bson;
+
+    reply >> bson;
+
+    return nlohmann::json::from_bson(bson);
+
 }
 
-void DBusHandler::emitSignal(std::string signalName, nlohmann::json arg) {
-    auto signal = SDbusEmitter->createSignal(interfaceName, signalName);
+void DBusHandler::callMethodAsync(PathHandler::dbusPath path, nlohmann::json arg, DBusVoidCallback callback) {
+    if(!_started) return; //add error
+
+    std::string uniqueId = path.service + path.objectPath;
+
+    auto exists = _DBusProxys.find(uniqueId);
+    auto proxy = (exists != _DBusProxys.end())? exists->second.get() : addProxy(path.service, path.objectPath);
+
+    auto method = proxy->createMethodCall(path.interface, path.functionality);
+
+    method << nlohmann::json::to_bson(arg);
+
+    auto wrapper = [&callback](sdbus::MethodReply& reply, const sdbus::Error* error) {
+
+        std::vector<u_int8_t> bson;
+        reply >> bson;
+
+        callback(nlohmann::json::from_bson(bson));
+
+    };
+
+    auto reply = proxy->callMethod(method, wrapper);
+}
+
+void DBusHandler::emitSignal(PathHandler::dbusPath path, nlohmann::json arg) {
+    if(!_started) return; //add error
+    
+    auto exists = _DBusObjects.find(path.objectPath);
+    auto object = (exists != _DBusObjects.end())? exists->second.get() : addObject(path.objectPath);
+
+    auto signal = object->createSignal(path.interface, path.functionality);
+
     signal << nlohmann::json::to_bson(arg);
-    SDbusEmitter->emitSignal(signal);
+
+    object->emitSignal(signal);
 }
 
-void DBusHandler::registerSignals(std::vector<std::string> signalsNames) {
-    for (int i = 0; i < signalsNames.size(); i++) {
-        DBusObject->registerSignal(interfaceName, signalsNames[i], "ai");
+void DBusHandler::finish() {
+
+    for (auto const& proxy : _DBusProxys) {
+        proxy.second->finishRegistration();
     }
-}
 
-void DBusHandler::getProxys(nlohmann::json DBusObjectConfig) {
-    std::vector<nlohmann::json> tempDependencies = DBusObjectConfig["dependencies"];
-
-    for(const& dependency : tempDependencies){
-
+    for (auto const& object : _DBusObjects) {
+        object.second->finishRegistration();
     }
-}
 
-void bind() {
+    _started = true;
+
+    _connection->enterEventLoop();
 }
