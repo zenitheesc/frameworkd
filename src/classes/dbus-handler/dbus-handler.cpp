@@ -1,10 +1,14 @@
 #include "./dbus-handler.hpp"
 
 
-
-DBusHandler::DBusHandler(std::string serviceName) {
-    _serviceName = "org.frameworkd." + serviceName;
+DBusHandler::DBusHandler(std::string serviceName):_isServer{true} {
+    _serviceName = serviceName;
     _connection = sdbus::createSystemBusConnection(_serviceName);
+}
+
+DBusHandler::DBusHandler(std::string serviceName, bool isServer):_isServer{isServer}{
+    _serviceName = serviceName;
+    if(isServer) _connection = sdbus::createSystemBusConnection(_serviceName);
 }
 
 sdbus::IObject* DBusHandler::addObject(std::string objectPath) {
@@ -21,7 +25,7 @@ sdbus::IProxy* DBusHandler::addProxy(std::string destinationService, std::string
     return _DBusProxys[uniqueId].get();
 }
 
-void DBusHandler::registerMethod(PathHandler::dbusPath path, DBusCallback callback) {
+void DBusHandler::registerMethod(PathHandler::DBusPath path, DBusCallback callback) {
 
     auto exists = _DBusObjects.find(path.objectPath);
     auto object = (exists != _DBusObjects.end())? exists->second.get() : addObject(path.objectPath);
@@ -41,11 +45,11 @@ void DBusHandler::registerMethod(PathHandler::dbusPath path, DBusCallback callba
 
     };
 
-    object->registerMethod(path.interface, path.functionality, "ai", "ai", wrapper);
+    object->registerMethod(path.interface, path.functionality, "ay", "ay", wrapper);
 
 }
 
-void DBusHandler::subscribeToSignal(PathHandler::dbusPath path, DBusVoidCallback callback) {
+void DBusHandler::subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback callback) {
 
     std::string uniqueId = path.service + path.objectPath;
 
@@ -65,17 +69,16 @@ void DBusHandler::subscribeToSignal(PathHandler::dbusPath path, DBusVoidCallback
 
 }
 
-void DBusHandler::registerSignal(PathHandler::dbusPath path) {
+void DBusHandler::registerSignal(PathHandler::DBusPath path) {
     
     auto exists = _DBusObjects.find(path.objectPath);
     auto object = (exists != _DBusObjects.end())? exists->second.get() : addObject(path.objectPath);
 
-    object->registerSignal(path.interface, path.functionality, "ai");
+    object->registerSignal(path.interface, path.functionality, "ay");
 
 }
 
-nlohmann::json DBusHandler::callMethod(PathHandler::dbusPath path, nlohmann::json arg) {
-    if(!_started) return; //add error
+nlohmann::json DBusHandler::callMethod(PathHandler::DBusPath path, nlohmann::json arg) {
 
     std::string uniqueId = path.service + path.objectPath;
 
@@ -96,8 +99,7 @@ nlohmann::json DBusHandler::callMethod(PathHandler::dbusPath path, nlohmann::jso
 
 }
 
-void DBusHandler::callMethodAsync(PathHandler::dbusPath path, nlohmann::json arg, DBusVoidCallback callback) {
-    if(!_started) return; //add error
+void DBusHandler::callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback callback) {
 
     std::string uniqueId = path.service + path.objectPath;
 
@@ -120,7 +122,7 @@ void DBusHandler::callMethodAsync(PathHandler::dbusPath path, nlohmann::json arg
     auto reply = proxy->callMethod(method, wrapper);
 }
 
-void DBusHandler::emitSignal(PathHandler::dbusPath path, nlohmann::json arg) {
+void DBusHandler::emitSignal(PathHandler::DBusPath path, nlohmann::json arg) {
     if(!_started) return; //add error
     
     auto exists = _DBusObjects.find(path.objectPath);
@@ -145,5 +147,7 @@ void DBusHandler::finish() {
 
     _started = true;
 
-    _connection->enterEventLoop();
+    if(_isServer)_connection->enterEventLoop();
 }
+
+
