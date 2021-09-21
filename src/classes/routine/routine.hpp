@@ -12,12 +12,17 @@
 
 class Status {
 	public:
-		enum stateT { 
-			MISSINGDEPENDENCIES = 0, UNINITIALIZED, INITIALIZED, RUNNING, STOPED, DEAD
-
+		enum stateT {
+			UNKNOWN = 0, MISSINGDEPENDENCIES, UNINITIALIZED, INITIALIZED, RUNNING, STOPPED, DEAD
 		};
+
+	private:
 		stateT state;
 		std::mutex mtx;
+
+	public:
+		stateT getState(void);
+		void setState(stateT newState);
 };
 
 class IRoutine {
@@ -26,7 +31,7 @@ class IRoutine {
 	public:
 		virtual void onLoad()=0;
 		virtual void loop()=0;
-		virtual void unload()=0;
+		virtual void unLoad()=0;
 		IRoutine(std::string id): id{id} {}
 		~IRoutine(void){};
 };
