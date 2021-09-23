@@ -60,13 +60,13 @@ class DBusHandler {
 
     nlohmann::json call(std::string DBusPath, nlohmann::json req, DBusCallback callback);
 
-    nlohmann::json expose(std::string DBusPath, nlohmann::json req, DBusCallback getter, DBusVoidCallback setter);
+      void expose(PathHandler::DBusPath path, DBusCallback getter, DBusVoidCallback setter);
 
-    nlohmann::json get(std::string DBusPath, nlohmann::json req);
+      nlohmann::json get(PathHandler::DBusPath path);
 
-    nlohmann::json get(std::string DBusPath, nlohmann::json req, DBusVoidCallback callback);
+      void get(PathHandler::DBusPath path , DBusVoidCallback callback);
 
-    nlohmann::json set(std::string DBusPath, nlohmann::json req);
+      void set(PathHandler::DBusPath path, nlohmann::json arg);
 
     nlohmann::json subscribe(std::string DBusPath, DBusCallback callback);
 
