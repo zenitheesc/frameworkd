@@ -1,0 +1,36 @@
+{
+    "daemonId": "DaemonIdExample",
+    "endpoints": [{
+            "id": "endpoint1Name",
+            "type": "signal",
+            "triggers": ["trigger1", "trigger2", "..."],
+            "dependencies": [{
+                "type": "routine",
+                "name": "org.zenith.daemons.daemon1.routineA",
+                "status": 0
+            }]
+        },
+        {
+            "id": "endpoint2Name",
+            "type": "method",
+            "triggers": ["trigger1"],
+            "dependencies": [{
+                "type": "daemon",
+                "name": "org.zenith.daemons.daemon2",
+                "status": 1
+            }]
+        }
+    ],
+    "routines": [{
+        "id": "routine1Name",
+        "signals": ["mySignal1, mySignal2"],
+        "dependencies": [{
+            "type": "endpoint",
+            "name": "org.zenith.daemons.daemon3.endpointB",
+            "status": 2
+        }]
+    }],
+    "data": {
+        "anything": "anything"
+    }
+}

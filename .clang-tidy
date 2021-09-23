@@ -1,0 +1,2 @@
+Checks: '-*,google-*,cppcoreguidelines-*,clang-*,readability-*,modernize-*,-cppcoreguidelines-*'
+FormatStyle: 'file'
