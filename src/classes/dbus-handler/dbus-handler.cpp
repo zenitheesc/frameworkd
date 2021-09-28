@@ -1,6 +1,4 @@
 #include "./dbus-handler.hpp"
-#include <iostream>
-
 
 DBusHandler::DBusHandler(std::string serviceName) : _isServer{true}, _serviceName{serviceName} {
 

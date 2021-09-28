@@ -28,11 +28,19 @@ class DBusHandler {
       DBusObjectMap _DBusObjects;
       DBusProxyMap _DBusProxys;
 
-   public:
-
       sdbus::IProxy* findProxy(PathHandler::DBusPath path);
 
       sdbus::IObject* findObject(PathHandler::DBusPath path);
+
+   public:
+
+      DBusHandler(std::string serviceName);
+
+      DBusHandler(std::string serviceName, bool isServer);
+
+      DBusHandler(std::string serviceName, DBusObjectMap DBusObjects , DBusProxyMap DBusProxys);
+
+      DBusHandler(std::string serviceName, DBusObjectMap DBusObjects , DBusProxyMap DBusProxys, std::unique_ptr<sdbus::IConnection> connection);
 
       void registerMethod(PathHandler::DBusPath path, DBusCallback&& callback);
 
@@ -46,35 +54,13 @@ class DBusHandler {
 
       void emitSignal(PathHandler::DBusPath path, nlohmann::json arg);
 
-      DBusHandler(std::string serviceName);
+      void exposeProperty(PathHandler::DBusPath path, DBusCallback getter, DBusVoidCallback setter);
 
-      DBusHandler(std::string serviceName, bool isServer);
+      nlohmann::json getProperty(PathHandler::DBusPath path);
 
-      DBusHandler(std::string serviceName, DBusObjectMap DBusObjects , DBusProxyMap DBusProxys);
+      void getProperty(PathHandler::DBusPath path, DBusVoidCallback callback);
 
-      DBusHandler(std::string serviceName, DBusObjectMap DBusObjects , DBusProxyMap DBusProxys, std::unique_ptr<sdbus::IConnection> connection);
-
-      nlohmann::json call(std::string DBusPath, nlohmann::json req);
-
-      nlohmann::json call(std::string DBusPath, nlohmann::json req, DBusCallback callback);
-
-      void expose(PathHandler::DBusPath path, DBusCallback getter, DBusVoidCallback setter);
-
-      nlohmann::json get(PathHandler::DBusPath path);
-
-      void get(PathHandler::DBusPath path , DBusVoidCallback callback);
-
-      void set(PathHandler::DBusPath path, nlohmann::json arg);
-
-      nlohmann::json subscribe(std::string DBusPath, DBusCallback callback);
-
-      nlohmann::json subscribe(std::string DBusPath, DBusCallback callback, nlohmann::json dependencies);
-
-      nlohmann::json bind(std::string DBusPath, DBusCallback callback);
-
-      nlohmann::json bind(std::string DBusPath, DBusCallback callback, nlohmann::json dependencies);
-
-      nlohmann::json emit(std::string DBusPath, nlohmann::json arg);
+      void setProperty(PathHandler::DBusPath path, nlohmann::json arg);
 
       void finish();
 
