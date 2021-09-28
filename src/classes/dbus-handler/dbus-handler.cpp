@@ -1,4 +1,5 @@
 #include "./dbus-handler.hpp"
+#include <iostream>
 
 
 DBusHandler::DBusHandler(std::string serviceName) : _isServer{true}, _serviceName{serviceName} {
@@ -45,11 +46,11 @@ sdbus::IProxy* DBusHandler::findProxy(PathHandler::DBusPath path) {
 
 }
 
-void DBusHandler::registerMethod(PathHandler::DBusPath path, DBusCallback callback) {
+void DBusHandler::registerMethod(PathHandler::DBusPath path, DBusCallback&& callback) {
 
     sdbus::IObject* object = findObject(path);
 
-    auto wrapper = [&callback](sdbus::MethodCall call) {
+    auto wrapper = [callback](sdbus::MethodCall call) {
 
         std::vector<u_int8_t> bson;
         call >> bson;
@@ -68,11 +69,11 @@ void DBusHandler::registerMethod(PathHandler::DBusPath path, DBusCallback callba
 
 }
 
-void DBusHandler::subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback callback) {
+void DBusHandler::subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback&& callback) {
 
     sdbus::IProxy* proxy = findProxy(path);
 
-    auto wrapper = [&callback](sdbus::Signal& signal) {
+    auto wrapper = [callback](sdbus::Signal& signal) {
 
         std::vector<u_int8_t> bson;
         signal >> bson;
@@ -108,14 +109,14 @@ nlohmann::json DBusHandler::callMethod(PathHandler::DBusPath path, nlohmann::jso
 
 }
 
-void DBusHandler::callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback callback) {
+void DBusHandler::callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback&& callback) {
 
     sdbus::IProxy* proxy = findProxy(path);
     auto method = proxy->createMethodCall(path.interface, path.functionality);
 
     method << nlohmann::json::to_bson(arg);
 
-    auto wrapper = [&callback](sdbus::MethodReply& reply, const sdbus::Error* error) {
+    auto wrapper = [callback](sdbus::MethodReply& reply, const sdbus::Error* error) {
 
         std::vector<u_int8_t> bson;
         reply >> bson;

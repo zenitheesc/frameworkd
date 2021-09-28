@@ -28,23 +28,23 @@ class DBusHandler {
       DBusObjectMap _DBusObjects;
       DBusProxyMap _DBusProxys;
 
+   public:
+
       sdbus::IProxy* findProxy(PathHandler::DBusPath path);
 
       sdbus::IObject* findObject(PathHandler::DBusPath path);
 
-      void registerMethod(PathHandler::DBusPath path, DBusCallback callback);
+      void registerMethod(PathHandler::DBusPath path, DBusCallback&& callback);
 
-      void subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback callback);
+      void subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback&& callback);
 
       void registerSignal(PathHandler::DBusPath path);
 
       nlohmann::json callMethod(PathHandler::DBusPath path, nlohmann::json arg);
 
-      void callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback callback);
+      void callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback&& callback);
 
       void emitSignal(PathHandler::DBusPath path, nlohmann::json arg);
-
-   public:
 
       DBusHandler(std::string serviceName);
 
