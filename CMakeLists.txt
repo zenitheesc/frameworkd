@@ -161,3 +161,16 @@ if(BUILD_TESTS)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
 endif()
 
+
+#------
+# BIN
+#------
+# Uncoment this section to build your binnaries with this CMake
+# NOTE: This section is temporary!!
+#		It will persist until the maintainer solve problems with outside inclusion by "include_subdirectory" mode.
+#
+#
+#add_executable(sample ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+#target_link_libraries(sample ${CONAN_LIBS} frameworkd)
+
+
