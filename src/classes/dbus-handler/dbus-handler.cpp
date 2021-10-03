@@ -1,18 +1,15 @@
 #include "./dbus-handler.hpp"
 
-DBusHandler::DBusHandler(std::string serviceName) : _isServer{true}, _serviceName{serviceName} {
+DBusHandler::DBusHandler(std::string serviceName)
+    : _isServer { true }
+    , _serviceName { serviceName }
+{
 
     _connection = sdbus::createSystemBusConnection(serviceName);
-
 }
 
-DBusHandler::DBusHandler(std::string serviceName, bool isServer) : _isServer{isServer}, _serviceName{serviceName} {
-
-    if (isServer) _connection = sdbus::createSystemBusConnection(serviceName);
-
-}
-
-sdbus::IObject* DBusHandler::findObject(PathHandler::DBusPath path) {
+sdbus::IObject* DBusHandler::findObject(PathHandler::DBusPath path)
+{
 
     try {
 
@@ -22,12 +19,11 @@ sdbus::IObject* DBusHandler::findObject(PathHandler::DBusPath path) {
 
         _DBusObjects[path.objectPath] = sdbus::createObject(*_connection, path.objectPath);
         return _DBusObjects[path.objectPath].get();
-
     }
-
 }
 
-sdbus::IProxy* DBusHandler::findProxy(PathHandler::DBusPath path) {
+sdbus::IProxy* DBusHandler::findProxy(PathHandler::DBusPath path)
+{
 
     std::string uniqueId = path.service + path.objectPath;
 
@@ -39,17 +35,15 @@ sdbus::IProxy* DBusHandler::findProxy(PathHandler::DBusPath path) {
 
         _DBusProxys[uniqueId] = sdbus::createProxy(path.service, path.objectPath);
         return _DBusProxys[uniqueId].get();
-
     }
-
 }
 
-void DBusHandler::registerMethod(PathHandler::DBusPath path, DBusCallback&& callback) {
+void DBusHandler::registerMethod(PathHandler::DBusPath path, DBusCallback&& callback)
+{
 
     sdbus::IObject* object = findObject(path);
 
     auto wrapper = [callback](sdbus::MethodCall call) {
-
         std::vector<u_int8_t> bson;
         call >> bson;
 
@@ -60,38 +54,35 @@ void DBusHandler::registerMethod(PathHandler::DBusPath path, DBusCallback&& call
         reply << nlohmann::json::to_bson(answer);
 
         reply.send();
-
     };
 
     object->registerMethod(path.interface, path.functionality, "ay", "ay", wrapper);
-
 }
 
-void DBusHandler::subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback&& callback) {
+void DBusHandler::subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback&& callback)
+{
 
     sdbus::IProxy* proxy = findProxy(path);
 
     auto wrapper = [callback](sdbus::Signal& signal) {
-
         std::vector<u_int8_t> bson;
         signal >> bson;
 
         callback(nlohmann::json::from_bson(bson));
-
     };
 
     proxy->registerSignalHandler(path.interface, path.functionality, wrapper);
-
 }
 
-void DBusHandler::registerSignal(PathHandler::DBusPath path) {
-    
+void DBusHandler::registerSignal(PathHandler::DBusPath path)
+{
+
     sdbus::IObject* object = findObject(path);
     object->registerSignal(path.interface, path.functionality, "ay");
-
 }
 
-nlohmann::json DBusHandler::callMethod(PathHandler::DBusPath path, nlohmann::json arg) {
+nlohmann::json DBusHandler::callMethod(PathHandler::DBusPath path, nlohmann::json arg)
+{
 
     sdbus::IProxy* proxy = findProxy(path);
     auto method = proxy->createMethodCall(path.interface, path.functionality);
@@ -104,10 +95,10 @@ nlohmann::json DBusHandler::callMethod(PathHandler::DBusPath path, nlohmann::jso
     reply >> bson;
 
     return nlohmann::json::from_bson(bson);
-
 }
 
-void DBusHandler::callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback&& callback) {
+void DBusHandler::callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback&& callback)
+{
 
     sdbus::IProxy* proxy = findProxy(path);
     auto method = proxy->createMethodCall(path.interface, path.functionality);
@@ -115,32 +106,31 @@ void DBusHandler::callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg
     method << nlohmann::json::to_bson(arg);
 
     auto wrapper = [callback](sdbus::MethodReply& reply, const sdbus::Error* error) {
-
         std::vector<u_int8_t> bson;
         reply >> bson;
 
         callback(nlohmann::json::from_bson(bson));
-
     };
 
     auto reply = proxy->callMethod(method, wrapper);
-
 }
 
-void DBusHandler::emitSignal(PathHandler::DBusPath path, nlohmann::json arg) {
+void DBusHandler::emitSignal(PathHandler::DBusPath path, nlohmann::json arg)
+{
 
-    if (!_started) return; //add error
-    
+    if (!_started)
+        return; //add error
+
     sdbus::IObject* object = findObject(path);
 
     auto signal = object->createSignal(path.interface, path.functionality);
     signal << nlohmann::json::to_bson(arg);
 
     object->emitSignal(signal);
-
 }
 
-void DBusHandler::finish() {
+void DBusHandler::finish()
+{
 
     for (auto const& proxy : _DBusProxys) {
         proxy.second->finishRegistration();
@@ -152,7 +142,7 @@ void DBusHandler::finish() {
 
     _started = true;
 
-    if (_isServer) _connection->enterEventLoop();
-
+    if (_isServer)
+        _connection->enterEventLoop();
 }
 

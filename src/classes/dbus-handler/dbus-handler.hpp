@@ -1,67 +1,63 @@
 #pragma once
 
 #include "../../utils/path-handler/path-handler.hpp"
-#include <sdbus-c++/sdbus-c++.h>
 #include <map>
 #include <nlohmann/json.hpp>
-#include <string>
+#include <sdbus-c++/sdbus-c++.h>
 #include <sstream>
+#include <string>
 #include <vector>
 
 class DBusHandler {
 
-   public:
+public:
+    using DBusObjectMap = std::map<std::string, std::unique_ptr<sdbus::IObject>>;
+    using DBusProxyMap = std::map<std::string, std::unique_ptr<sdbus::IProxy>>;
+    using DBusVoidCallback = std::function<void(nlohmann::json req)>;
+    using DBusCallback = std::function<nlohmann::json(nlohmann::json req)>;
 
-      using DBusObjectMap = std::map<std::string, std::unique_ptr<sdbus::IObject>>;
-      using DBusProxyMap = std::map<std::string, std::unique_ptr<sdbus::IProxy>>;
-      using DBusVoidCallback = std::function<void (nlohmann::json req)>;
-      using DBusCallback = std::function<nlohmann::json (nlohmann::json req)>;
+private:
+    std::string _serviceName;
+    bool _started;
+    bool _isServer;
 
-   private:
+    std::unique_ptr<sdbus::IConnection> _connection;
 
-      std::string _serviceName;
-      bool _started;
-      bool _isServer;
+    DBusObjectMap _DBusObjects;
+    DBusProxyMap _DBusProxys;
 
-      std::unique_ptr<sdbus::IConnection> _connection;
+    sdbus::IProxy* findProxy(PathHandler::DBusPath path);
 
-      DBusObjectMap _DBusObjects;
-      DBusProxyMap _DBusProxys;
+    sdbus::IObject* findObject(PathHandler::DBusPath path);
 
-      sdbus::IProxy* findProxy(PathHandler::DBusPath path);
+public:
+    DBusHandler(std::string serviceName);
 
-      sdbus::IObject* findObject(PathHandler::DBusPath path);
+    DBusHandler() = default;
 
-   public:
+    DBusHandler(std::string serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys);
 
-      DBusHandler(std::string serviceName);
+    DBusHandler(std::string serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys, std::unique_ptr<sdbus::IConnection> connection);
 
-      DBusHandler(std::string serviceName, bool isServer);
+    void registerMethod(PathHandler::DBusPath path, DBusCallback&& callback);
 
-      DBusHandler(std::string serviceName, DBusObjectMap DBusObjects , DBusProxyMap DBusProxys);
+    void subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback&& callback);
 
-      DBusHandler(std::string serviceName, DBusObjectMap DBusObjects , DBusProxyMap DBusProxys, std::unique_ptr<sdbus::IConnection> connection);
+    void registerSignal(PathHandler::DBusPath path);
 
-      void registerMethod(PathHandler::DBusPath path, DBusCallback&& callback);
+    nlohmann::json callMethod(PathHandler::DBusPath path, nlohmann::json arg);
 
-      void subscribeToSignal(PathHandler::DBusPath path, DBusVoidCallback&& callback);
+    void callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback&& callback);
 
-      void registerSignal(PathHandler::DBusPath path);
+    void emitSignal(PathHandler::DBusPath path, nlohmann::json arg);
 
-      nlohmann::json callMethod(PathHandler::DBusPath path, nlohmann::json arg);
+    void exposeProperty(PathHandler::DBusPath path, DBusCallback getter, DBusVoidCallback setter);
 
-      void callMethodAsync(PathHandler::DBusPath path, nlohmann::json arg, DBusVoidCallback&& callback);
+    nlohmann::json getProperty(PathHandler::DBusPath path);
 
-      void emitSignal(PathHandler::DBusPath path, nlohmann::json arg);
+    void getProperty(PathHandler::DBusPath path, DBusVoidCallback callback);
 
-      void exposeProperty(PathHandler::DBusPath path, DBusCallback getter, DBusVoidCallback setter);
+    void setProperty(PathHandler::DBusPath path, nlohmann::json arg);
 
-      nlohmann::json getProperty(PathHandler::DBusPath path);
-
-      void getProperty(PathHandler::DBusPath path, DBusVoidCallback callback);
-
-      void setProperty(PathHandler::DBusPath path, nlohmann::json arg);
-
-      void finish();
-
+    void finish();
 };
