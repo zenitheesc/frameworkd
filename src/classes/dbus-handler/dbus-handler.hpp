@@ -54,11 +54,11 @@ class DBusHandler {
 
       void emitSignal(PathHandler::DBusPath path, nlohmann::json arg);
 
-      void exposeProperty(PathHandler::DBusPath path, DBusCallback getter, DBusVoidCallback setter);
+      void exposeProperty(PathHandler::DBusPath path, std::function<nlohmann::json()>&& getter, DBusVoidCallback&& setter);
 
       nlohmann::json getProperty(PathHandler::DBusPath path);
 
-      void getProperty(PathHandler::DBusPath path, DBusVoidCallback callback);
+      void getProperty(PathHandler::DBusPath path, DBusVoidCallback&& callback);
 
       void setProperty(PathHandler::DBusPath path, nlohmann::json arg);
 

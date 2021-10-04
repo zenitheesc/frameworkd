@@ -1,4 +1,4 @@
-#include "./dbus-handler.hpp"
+#include "dbus-handler.hpp"
 
 DBusHandler::DBusHandler(std::string serviceName) : _isServer{true}, _serviceName{serviceName} {
 
@@ -8,7 +8,9 @@ DBusHandler::DBusHandler(std::string serviceName) : _isServer{true}, _serviceNam
 
 DBusHandler::DBusHandler(std::string serviceName, bool isServer) : _isServer{isServer}, _serviceName{serviceName} {
 
-    if (isServer) _connection = sdbus::createSystemBusConnection(serviceName);
+    if (isServer) {
+        _connection = sdbus::createSystemBusConnection(serviceName);
+    }
 
 }
 
@@ -140,6 +142,51 @@ void DBusHandler::emitSignal(PathHandler::DBusPath path, nlohmann::json arg) {
 
 }
 
+void DBusHandler::exposeProperty(PathHandler::DBusPath path, std::function<nlohmann::json()>&& getter, DBusVoidCallback&& setter) {
+
+    sdbus::IObject* object = findObject(path);
+
+    auto getterWrapper = [getter]() {
+
+        return nlohmann::json::to_bson(getter());
+        
+    };
+
+    auto setterWrapper = [setter](const std::vector<u_int8_t>& arg) {
+
+        setter(nlohmann::json::from_bson(arg));
+
+    };
+
+    object->registerProperty(path.functionality).onInterface(path.interface).withGetter(getterWrapper).withSetter(setterWrapper);
+
+}
+
+nlohmann::json DBusHandler::getProperty(PathHandler::DBusPath path) {
+
+    sdbus::IProxy* proxy = findProxy(path);
+    std::vector<u_int8_t> property = proxy->getProperty(path.functionality).onInterface(path.interface);
+
+    return nlohmann::json::from_bson(property);
+
+}
+
+void DBusHandler::getProperty(PathHandler::DBusPath path, DBusVoidCallback&& callback) {
+
+    sdbus::IProxy* proxy = findProxy(path);
+    std::vector<u_int8_t> property = proxy->getProperty(path.functionality).onInterface(path.interface);
+
+    callback(nlohmann::json::from_bson(property));
+
+}
+
+void DBusHandler::setProperty(PathHandler::DBusPath path, nlohmann::json arg) {
+
+    sdbus::IProxy* proxy = findProxy(path);
+    proxy->setProperty(path.functionality).onInterface(path.interface).toValue(nlohmann::json::to_bson(arg));
+
+}
+
 void DBusHandler::finish() {
 
     for (auto const& proxy : _DBusProxys) {
@@ -152,7 +199,11 @@ void DBusHandler::finish() {
 
     _started = true;
 
-    if (_isServer) _connection->enterEventLoop();
+    if (_isServer) {
+
+        _connection->enterEventLoop();
+
+    }
 
 }
 
