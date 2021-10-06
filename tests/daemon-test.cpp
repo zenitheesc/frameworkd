@@ -4,33 +4,46 @@
 #include <gtest/gtest.h>
 #include <thread>
 
+PathHandler::DBusPath m_methodPath = {
+    "org.sdbuscpp.concatenator",
+    "/org/sdbuscpp/concatenator",
+    "org.sdbuscpp.Concatenator",
+    "concatenate"
+};
+PathHandler::DBusPath m_signalPath = {
+    "org.sdbuscpp.concatenator",
+    "/org/sdbuscpp/concatenator",
+    "org.sdbuscpp.Concatenator",
+    "concatenated"
+};
+
+bool isServerConfig;
+
 class ServerClient : public ::testing::Test {
-protected:
-    PathHandler::DBusPath m_serverPath = {
-        "org.sdbuscpp.concatenator",
-        "/org/sdbuscpp/concatenator",
-        "org.sdbuscpp.Concatenator",
-        "concatenate"
-    };
+public:
     DBusHandler m_client;
 
-    void SetUp() override
+    static void SetUpTestSuite()
     {
-        std::thread t1(&ServerClient::server, this);
+        isServerConfig = true;
+        std::thread t1(&ServerClient::server);
         t1.detach();
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        while (isServerConfig) { };
     }
 
-    void server()
+    static void server()
     {
-        DBusHandler server(m_serverPath.service);
-        server.registerMethod(m_serverPath, [](nlohmann::json req) {
+        DBusHandler server(m_methodPath.service);
+        server.registerSignal(m_signalPath);
+        server.registerMethod(m_methodPath, [&](nlohmann::json req) {
             nlohmann::json res;
             int num = req["num"];
             res["num"] = num * 2;
+            server.emitSignal(m_signalPath, res);
             return res;
         });
 
+        isServerConfig = false;
         server.finish();
     }
 };
@@ -42,6 +55,38 @@ TEST_F(ServerClient, Method)
 
     int num = 4;
     arg["num"] = num;
-    res = m_client.callMethod(m_serverPath, arg);
-    EXPECT_EQ(num * 3, res["num"]);
+    res = m_client.callMethod(m_methodPath, arg);
+
+    EXPECT_EQ(num * 2, res["num"]);
 }
+
+TEST_F(ServerClient, AsyncMethod)
+{
+    nlohmann::json arg;
+    bool isCalled = false;
+    int num = 4;
+
+    arg["num"] = num;
+
+    m_client.finish();
+    m_client.callMethodAsync(m_methodPath, arg, [&](nlohmann::json res) {
+        EXPECT_EQ(num * 2, res["num"]);
+        isCalled = true;
+    });
+    while (!isCalled) { }
+}
+
+TEST_F(ServerClient, Signal)
+{
+    nlohmann::json arg;
+    nlohmann::json res;
+    int num = 4;
+    m_client.subscribeToSignal(m_signalPath, [&](nlohmann::json rec) {
+        EXPECT_EQ(num * 2, rec["num"]);
+    });
+    m_client.finish();
+    arg["num"] = num;
+
+    res = m_client.callMethod(m_methodPath, arg);
+}
+
