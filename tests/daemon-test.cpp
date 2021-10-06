@@ -32,7 +32,7 @@ nlohmann::json m_properties;
 
 class ServerClient : public ::testing::Test {
 public:
-    DBusHandler m_client { m_methodPath.service, false };
+    DBusHandler m_client {};
 
     static void SetUpTestSuite()
     {
@@ -127,7 +127,7 @@ TEST_F(ServerClient, AsyncGet)
 TEST_F(ServerClient, Set)
 {
     nlohmann::json arg;
-    arg["num"] = std::static_cast<int>(m_properties["num"]) * 4;
+    arg["num"] = static_cast<int>(m_properties["num"]) * 4;
 
     m_client.finish();
     m_client.setProperty(m_propertiesPath, arg);
