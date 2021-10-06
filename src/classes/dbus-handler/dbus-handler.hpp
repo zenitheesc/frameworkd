@@ -53,9 +53,9 @@ private:
     sdbus::IObject* findObject(const DBusHandler::Path& path);
 
 public:
-    DBusHandler(const std::string& serviceName);
+    DBusHandler();
 
-    DBusHandler(const std::string& serviceName, bool isServer);
+    DBusHandler(const std::string& serviceName);
 
     DBusHandler(const std::string& serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys);
 

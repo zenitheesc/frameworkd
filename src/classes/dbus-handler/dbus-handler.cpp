@@ -36,7 +36,9 @@ DBusHandler::DBusHandler(const std::string& serviceName, bool isServer)
     if (isServer) {
         _connection = sdbus::createSystemBusConnection(serviceName);
     }
-}
+
+DBusHandler::DBusHandler()
+    : m_isServer { false } {};
 
 void DBusHandler::registerMethod(const DBusHandler::Path& path, DBusCallback&& callback)
 {
