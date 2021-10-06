@@ -25,6 +25,8 @@ class DBusHandler
         std::string interface;
         std::string functionality;
 
+        Path() = default;
+
         Path(const std::string &service, const std::string &objectPath, const std::string &interface,
              const std::string &functionality)
             : service{std::move(service)}, objectPath{std::move(objectPath)}, interface{std::move(interface)},
