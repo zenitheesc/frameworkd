@@ -1,7 +1,9 @@
 #include "../src/classes/dbus-handler/dbus-handler.hpp"
+
 #include <chrono>
 #include <cstdlib>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <thread>
 
 DBusHandler::Path m_methodPath {
@@ -110,7 +112,6 @@ TEST_F(ServerClient, Get)
     m_client.finish();
 
     nlohmann::json res = m_client.getProperty(m_propertiesPath);
-
     EXPECT_EQ(res, m_properties);
 }
 
@@ -126,13 +127,10 @@ TEST_F(ServerClient, AsyncGet)
 TEST_F(ServerClient, Set)
 {
     nlohmann::json arg;
-
-    arg["num"] = (int)m_properties["num"] * 4;
+    arg["num"] = std::static_cast<int>(m_properties["num"]) * 4;
 
     m_client.finish();
-
     m_client.setProperty(m_propertiesPath, arg);
 
     EXPECT_EQ(arg, m_properties);
 }
-
