@@ -1,5 +1,6 @@
 #pragma once
 
+#include <exception>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <sdbus-c++/sdbus-c++.h>
@@ -27,11 +28,13 @@ class DBusHandler
         Path(const std::string &service, const std::string &objectPath, const std::string &interface,
              const std::string &functionality)
             : service{std::move(service)}, objectPath{std::move(objectPath)}, interface{std::move(interface)},
-              functionality{std::move(functionality)} {
-
-                  // throw exception if one property is empty
-
-              };
+              functionality{std::move(functionality)}
+        {
+            if (service.empty() || objectPath.empty() || interface.empty() || functionality.empty())
+            {
+                throw std::invalid_argument("Invalid path: empty string doesn't satisfies path format");
+            }
+        };
     };
 
   private:
