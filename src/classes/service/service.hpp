@@ -5,20 +5,49 @@
 
 class IService {
 public:
-    std::string m_serviceId;
+    /* Id of the service */
+	std::string m_serviceId;
 
 protected:
     //	DBusHandler::DBusHandler m_dbus;
 
 public:
-    virtual void setup() = 0;
-    virtual void routine() = 0;
-    virtual void destroy() = 0;
-    explicit IService(std::string serviceId)
+    
+	/**
+	 * @brief	An interface function to be implemented
+	 * 			by the user to make the "setup" of its 
+	 * 			class' parameter members.
+	 */
+	virtual void setup() = 0;
+    
+	/**
+	 * @brief	An interface function to be implemented
+	 * 			by the user to make the "setup" of its 
+	 * 			class' parameter members.
+	 */
+	virtual void routine() = 0;
+    
+	/**
+	 * @brief	An interface function to be implemented
+	 * 			by the user to make the "setup" of its 
+	 * 			class' parameter members.
+	 */
+	virtual void destroy() = 0;
+    
+	/**
+	 * @brief	An interface function to be implemented
+	 * 			by the user to make the "setup" of its 
+	 * 			class' parameter members.
+	 */
+	explicit IService(std::string serviceId)
         : m_serviceId { serviceId }
     {
     }
 
+	/**
+	 * @brief	A virtual destructor to ensure 
+	 * 			inheriance compatibility.
+	 */
 	virtual ~IService() = default;
 };
 
