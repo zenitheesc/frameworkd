@@ -28,7 +28,7 @@ public:
 
 class ServiceProxy {
 private:
-	std::unique_ptr<IService> m_innerService;
+	IService& m_innerService;
     struct SafeJson {
         nlohmann::json data;
         std::mutex mtx;
@@ -43,9 +43,10 @@ public:
 	ServiceProxy(IService& service, nlohmann::json configs);
     ~ServiceProxy();
 
-private:
+//private:
     void run();
     void stop();
-    void servicePod(IService& service, Status& status);
+private:    
+	static void servicePod(IService& service, Status& status);
 };
 
