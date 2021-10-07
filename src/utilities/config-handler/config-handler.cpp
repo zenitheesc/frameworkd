@@ -54,7 +54,7 @@ auto ConfigHandler::getConfig(std::string field) const -> const nlohmann::json
 }
 
 /**
- *@brief Operator overload that encapsulates the @ref getConfig()
+ *@brief Operator overload that encapsulates the getConfig()
  */
 auto ConfigHandler::operator[](std::string field) const -> const nlohmann::json
 {
