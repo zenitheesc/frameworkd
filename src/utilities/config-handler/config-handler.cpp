@@ -1,6 +1,6 @@
 #include "config-handler.hpp"
 
-ConfigHandler::ConfigHandler(std::string fileName)
+ConfigHandler::ConfigHandler(const std::string& fileName)
     : m_fileName(fileName)
 {
 }
@@ -38,7 +38,7 @@ void ConfigHandler::read()
  * @brief Reads a file and turn them into a json object
  * @param fileName Name of the file to read
  */
-void ConfigHandler::read(std::string fileName)
+void ConfigHandler::read(const std::string& fileName)
 {
     m_fileName = fileName;
     read();
@@ -48,7 +48,7 @@ void ConfigHandler::read(std::string fileName)
  * @brief Gets a value from the json object
  * @param field Field to get the value 
  */
-auto ConfigHandler::getConfig(std::string field) const -> const nlohmann::json
+auto ConfigHandler::getConfig(const std::string& field) const -> const nlohmann::json
 {
     return m_config[field];
 }
@@ -56,7 +56,7 @@ auto ConfigHandler::getConfig(std::string field) const -> const nlohmann::json
 /**
  * @brief Operator overload that encapsulates the getConfig()
  */
-auto ConfigHandler::operator[](std::string field) const -> const nlohmann::json
+auto ConfigHandler::operator[](const std::string& field) const -> const nlohmann::json
 {
     return getConfig(field);
 }
