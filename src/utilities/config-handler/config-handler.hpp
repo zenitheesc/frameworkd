@@ -6,7 +6,7 @@ class ConfigHandler {
 private:
     static nlohmann::json m_config;
     std::string m_fileName;
-    std::vector<std::string> m_requiredFields {
+    const std::vector<std::string> m_requiredFields {
         "data", "services", "serviceId"
     };
 

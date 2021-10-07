@@ -10,7 +10,7 @@ ConfigHandler::ConfigHandler(std::string fileName)
  */
 void ConfigHandler::validateConfig()
 {
-    for (auto it : m_requiredFields) {
+    for (const auto& it : m_requiredFields) {
         if (!m_config.contains(it)) {
             throw std::runtime_error("Config file dosen't have all the required fields");
         }
