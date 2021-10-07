@@ -70,9 +70,6 @@ set(ZFKD_PUBLIC_UTILITIES
 	
 )
 
-
-
-
 #----------------------------
 # SOURCE FILES CONFIGURATION
 #----------------------------
