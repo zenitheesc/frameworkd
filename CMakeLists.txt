@@ -74,8 +74,8 @@ set(ZFKD_PUBLIC_UTILITIES
 # SOURCE FILES CONFIGURATION
 #----------------------------
 
-set(ZFKD_SRC_DIR ${CMAKE_CURRENT_SRC_DIR}/src)
-set(ZFKD_INCLUDE_DIR ${CMAKE_CURRENT_SRC_DIR}/include)
+set(ZFKD_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(ZFKD_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set(ZFKD_UTIL_SUBDIR utilities)
 set(ZFKD_CLSS_SUBDIR classes)
 
@@ -109,7 +109,7 @@ set(CMAKE_CXX_STANDARD 17)
 option(ZFKD_USING_CONAN_FOR_DEV "(default ON)" ON)
 
 if(ZFKD_USING_CONAN_FOR_DEV)
-	include(frameworkd-objlib ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     conan_basic_setup()
 endif()
 
@@ -192,7 +192,7 @@ option(BUILD_TESTS "Build and install tests (default OFF)" OFF)
 if(BUILD_TESTS)
 	message(STATUS "Building with tests")
 	enable_testing()
-	add_subdirectory("${CMAKE_CURRENT_SRC_DIR}/tests")
+	add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/tests")
 endif()
 
 
@@ -204,7 +204,8 @@ endif()
 #        It will persist until the maintainer solve problems with outside inclusion by "include_subdirectory" mode.
 #
 #
-#add_executable(sample ${CMAKE_CURRENT_SRC_DIR}/main.cpp)
+#add_executable(sample ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+
 #target_link_libraries(sample ${CONAN_LIBS} frameworkd)
 
 
