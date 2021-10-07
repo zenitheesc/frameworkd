@@ -102,6 +102,8 @@ set(ZFKD_SRCS ${ZFKD_CPP_SRCS} ${ZFKD_HDR_SRCS} ${ZFKD_PUBLIC_HDRS})
 
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_CXX_FLAGS "-pthread ${CMAKE_CXX_FLAGS}")
+
 #-----------------------------------
 # INCLUDE CONAN SETINGS FOR DEVELOPERS
 #-----------------------------------
