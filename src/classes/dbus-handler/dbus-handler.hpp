@@ -48,14 +48,14 @@ private:
     DBusObjectMap m_DBusObjects;
     DBusProxyMap m_DBusProxys;
 
-    sdbus::IProxy* findProxy(const DBusHandler::Path& path);
+    auto findProxy(const DBusHandler::Path& path) -> sdbus::IProxy*;
 
-    sdbus::IObject* findObject(const DBusHandler::Path& path);
+    auto findObject(const DBusHandler::Path& path) -> sdbus::IObject*;
 
 public:
-    DBusHandler();
+    DBusHandler() = default;
 
-    DBusHandler(const std::string& serviceName);
+    explicit DBusHandler(const std::string& serviceName);
 
     DBusHandler(const std::string& serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys);
 
@@ -68,7 +68,7 @@ public:
 
     void registerSignal(const DBusHandler::Path& path);
 
-    nlohmann::json callMethod(const DBusHandler::Path& path, nlohmann::json arg);
+    auto callMethod(const DBusHandler::Path& path, nlohmann::json arg) -> nlohmann::json;
 
     void callMethodAsync(const DBusHandler::Path& path, nlohmann::json arg, DBusVoidCallback&& callback);
 
@@ -77,7 +77,7 @@ public:
     void exposeProperty(const DBusHandler::Path& path, std::function<nlohmann::json()>&& getter,
         DBusVoidCallback&& setter);
 
-    nlohmann::json getProperty(const DBusHandler::Path& path);
+    auto getProperty(const DBusHandler::Path& path) -> nlohmann::json;
 
     void getProperty(const DBusHandler::Path& path, DBusVoidCallback&& callback);
 

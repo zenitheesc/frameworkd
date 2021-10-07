@@ -1,25 +1,22 @@
 #include "dbus-handler.hpp"
 
-sdbus::IObject* DBusHandler::findObject(const DBusHandler::Path& path)
+auto DBusHandler::findObject(const DBusHandler::Path& path) -> sdbus::IObject*
 {
     try {
         return m_DBusObjects.at(path.objectPath).get();
     } catch (std::out_of_range& e) {
-
         m_DBusObjects[path.objectPath] = sdbus::createObject(*m_connection, path.objectPath);
         return m_DBusObjects[path.objectPath].get();
     }
 }
 
-sdbus::IProxy* DBusHandler::findProxy(const DBusHandler::Path& path)
+auto DBusHandler::findProxy(const DBusHandler::Path& path) -> sdbus::IProxy*
 {
     const std::string uniqueId = path.service + path.objectPath;
 
     try {
-
         return m_DBusProxys.at(uniqueId).get();
     } catch (std::out_of_range& e) {
-
         m_DBusProxys[uniqueId] = sdbus::createProxy(path.service, path.objectPath);
         return m_DBusProxys[uniqueId].get();
     }
@@ -29,7 +26,6 @@ DBusHandler::DBusHandler(const std::string& serviceName)
     : m_isServer { true }
     , m_serviceName { serviceName }
 {
-
     m_connection = sdbus::createSystemBusConnection(serviceName);
 }
 
@@ -38,10 +34,13 @@ DBusHandler::DBusHandler()
 
 void DBusHandler::registerMethod(const DBusHandler::Path& path, DBusCallback&& callback)
 {
-    if (!m_isServer)
+    if (!m_isServer) {
         throw std::logic_error("Only servers can register methods");
-    if (m_started)
+    }
+
+    if (m_started) {
         throw std::logic_error("methods should be register before finishing the handler");
+    }
 
     sdbus::IObject* object = findObject(path);
 
@@ -77,16 +76,19 @@ void DBusHandler::subscribeToSignal(const DBusHandler::Path& path, DBusVoidCallb
 
 void DBusHandler::registerSignal(const DBusHandler::Path& path)
 {
-    if (!m_isServer)
+    if (!m_isServer) {
         throw std::logic_error("Only servers can register signals");
-    if (m_started)
+    }
+
+    if (m_started) {
         throw std::logic_error("register signals is only possible before finishing the handler");
+    }
 
     sdbus::IObject* object = findObject(path);
     object->registerSignal(path.interface, path.functionality, "ay");
 }
 
-nlohmann::json DBusHandler::callMethod(const DBusHandler::Path& path, nlohmann::json arg)
+auto DBusHandler::callMethod(const DBusHandler::Path& path, nlohmann::json arg) -> nlohmann::json
 {
     sdbus::IProxy* proxy = findProxy(path);
     auto method = proxy->createMethodCall(path.interface, path.functionality);
@@ -119,10 +121,13 @@ void DBusHandler::callMethodAsync(const DBusHandler::Path& path, nlohmann::json 
 
 void DBusHandler::emitSignal(const DBusHandler::Path& path, nlohmann::json arg)
 {
-    if (!m_isServer)
+    if (!m_isServer) {
         throw std::logic_error("Only servers can emit signals");
-    if (!m_started)
+    }
+
+    if (!m_started) {
         throw std::logic_error("emit a signal is only possible after finishing the handler");
+    }
 
     sdbus::IObject* object = findObject(path);
 
@@ -136,10 +141,13 @@ void DBusHandler::exposeProperty(const DBusHandler::Path& path, std::function<nl
     DBusVoidCallback&& setter)
 {
 
-    if (!m_isServer)
+    if (!m_isServer) {
         throw std::logic_error("Only servers can expose properties");
-    if (m_started)
+    }
+
+    if (m_started) {
         throw std::logic_error("expose a property is only possible before finishing the handler");
+    }
 
     sdbus::IObject* object = findObject(path);
 
@@ -153,7 +161,7 @@ void DBusHandler::exposeProperty(const DBusHandler::Path& path, std::function<nl
         .withSetter(setterWrapper);
 }
 
-nlohmann::json DBusHandler::getProperty(const DBusHandler::Path& path)
+auto DBusHandler::getProperty(const DBusHandler::Path& path) -> nlohmann::json
 {
     sdbus::IProxy* proxy = findProxy(path);
     std::vector<u_int8_t> property = proxy->getProperty(path.functionality).onInterface(path.interface);
@@ -188,7 +196,6 @@ void DBusHandler::finish()
     }
 
     if (m_isServer) {
-
         m_connection->enterEventLoop();
     }
 }
