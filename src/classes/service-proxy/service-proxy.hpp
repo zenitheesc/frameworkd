@@ -1,36 +1,51 @@
-/*
-* routine-handler.hpp
-* 
-* Author: Carlos Craveiro (@CarlosCraveiro)
-* Created On: September 11, 2021
-*/
-
 #pragma once
-#include <thread>
+#include "../service/service.hpp"
 #include <mutex>
-#include "../routine/routine.hpp"
+#include <nlohmann/json.hpp>
+#include <thread>
+#include <memory>
 
-void routineModule(IRoutine& routine, Status& status);
+class Status {
+public:
+    enum stateT {
+        MISSINGDEPENDENCIES = 0,
+        UNINITIALIZED,
+        INITIALIZED,
+        RUNNING,
+        STOPED,
+        DEAD
+    };
 
-class RoutineHandler {
-	public:
-		IRoutine* routine;
-		struct Info {
-			nlohmann::json data;
-			std::mutex occupied;
-		};
-		Info info;
-		Status status;
-		std::thread innerThread;
-		nlohmann::json depsRefState;
-		nlohmann::json depsCrntState;
-			
-	public:
-		void run(void);
-		void stop(void);
-		nlohmann::json getStatus(void);
-		nlohmann::json update(void);
-		RoutineHandler(IRoutine& routine, nlohmann::json& configs);
-		~RoutineHandler(void);
+private:
+    stateT m_state;
+    std::mutex m_mtx;
+
+public:
+	auto getState()->stateT;
+	void setState(stateT newState);
+};
+
+
+class ServiceProxy {
+private:
+	std::unique_ptr<IService> m_innerService;
+    struct SafeJson {
+        nlohmann::json data;
+        std::mutex mtx;
+    };
+    SafeJson m_dependencies;
+    Status m_status;
+    std::thread m_innerThread;
+
+public:
+    auto getStatus()->nlohmann::json;
+    //    nlohmann::json update(void);
+	ServiceProxy(IService& service, nlohmann::json configs);
+    ~ServiceProxy();
+
+private:
+    void run();
+    void stop();
+    void servicePod(IService& service, Status& status);
 };
 

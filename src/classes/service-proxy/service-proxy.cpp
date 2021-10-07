@@ -1,95 +1,68 @@
-/*
-* routine-handler.cpp
-*
-* Author: Carlos Craveiro (@CarlosCraveiro)
-* Created On: September 11, 2021
-*/
+#include "service-proxy.hpp"
 
-#include "routine-handler.hpp"
+auto Status::getState() -> Status::stateT
+{
 
-void routineModule(IRoutine& routine, Status& status) {
-	routine.onLoad();
-	status.mtx.lock();
-	status.state = Status::RUNNING;
-	while(status.state == Status::STOPED){
-		status.mtx.unlock();
-		routine.loop();
-		status.mtx.lock();
-	}
-	status.mtx.unlock();
+    const std::lock_guard<std::mutex> lock(m_mtx);
+
+    return m_state;
 }
 
-RoutineHandler::RoutineHandler(IRoutine& routine, nlohmann::json& configs) {
-	(*this->routine) = routine;
-	this->status.mtx.lock();
-	this->status.state = Status::MISSINGDEPENDENCIES;
-	this->status.mtx.unlock();
-	this->depsRefState = configs["dependencies"];
-	this->depsCrntState = configs["dependencies"];
-	for(nlohmann::json& dependencie : this->depsCrntState) {
-		dependencie["status"] = Status::MISSINGDEPENDENCIES;
-	}
-	this->info.data = configs;
-	
+void Status::setState(Status::stateT newState)
+{
+
+    const std::lock_guard<std::mutex> lock(m_mtx);
+
+    m_state = newState;
 }
 
-RoutineHandler::~RoutineHandler() {
-	//DO NOTHING
+void ServiceProxy::servicePod(std::unique_ptr<IService> service, Status& status)
+{
+
+    service->setup();
+    status.setState(Status::RUNNING);
+
+    while (status.getState() == Status::STOPED) {
+
+        service->routine();
+    }
+
+    service->destroy();
 }
 
-void RoutineHandler::run(void) {
-	std::thread thread(routineModule, std::ref(*routine), std::ref(status));
-	status.mtx.lock();
-	status.state = Status::INITIALIZED;
-	status.mtx.unlock();
-	std::swap(thread, innerThread);
+ServiceProxy::ServiceProxy(IService& service, nlohmann::json configs)
+    : m_innerService(std::make_unique<IService>(service))
+{
+    m_dependencies.data = configs; //DETAILS ABOUT DEPENDENCIES
 }
 
-void RoutineHandler::stop(void) {
-	status.mtx.lock();
-	status.state = Status::STOPED;
-	status.mtx.unlock();
-	innerThread.join();
-	status.mtx.lock();
-	status.state = Status::DEAD;
-	status.mtx.unlock();
+ServiceProxy::~ServiceProxy()
+{
+    auto currState = m_status.getState();
+    if (currState == Status::RUNNING) {
+        stop();
+    }
 }
 
-nlohmann::json RoutineHandler::getStatus(void) {
-	std::lock_guard<std::mutex> lck(info.occupied);
-	status.mtx.lock();
-	info.data["state"] = status.state;
-	status.mtx.unlock();
-	return info.data;
-
+void ServiceProxy::run()
+{
+    std::thread thread(servicePod, std::ref(m_innerService), std::ref(m_status)); //WARNINGGG!!!!!!!!!!!!!!!!!!!
+    m_status.setState(Status::INITIALIZED);
+    std::swap(thread, m_innerThread);
 }
 
-nlohmann::json RoutineHandler::update(void) {
-	int missingDeps = depsRefState["lenght"];
-	for(int i = 0; i < depsRefState["lenght"]; i++) {
-		using namespace nlohmann;
-		const json& dependencie = depsCrntState[i];
-		const json& dependencieRef = depsRefState[i];
-		if(dependencie["status"] == dependencieRef["status"]) {
-			missingDeps--;
-		}
-	}
-	if(!missingDeps) {
-		run();
-		nlohmann::json changes = getStatus();
-		return (nlohmann::json) {{{"changed", true}}, changes};
-	}
-	status.mtx.lock();
-	if(status.state == Status::RUNNING) {
-		status.mtx.unlock();
-		stop();
-		status.mtx.lock();
-		status.state = Status::MISSINGDEPENDENCIES;
-		status.mtx.unlock();
-		nlohmann::json changes = getStatus();
-		return (nlohmann::json) {{{"changed", true}}, changes};
-	}
-	status.mtx.unlock();
-	return (nlohmann::json) {{"changed", false}};
+void ServiceProxy::stop()
+{
+    m_status.setState(Status::STOPED);
+    m_innerThread.join();
+    m_status.setState(Status::DEAD);
+}
+
+auto ServiceProxy::getStatus() -> nlohmann::json
+{
+    auto currStatus = m_status.getState();
+    std::lock_guard<std::mutex> lock(m_dependencies.mtx);
+
+    return { m_dependencies.data["serviceId"], { "State", currStatus } };
 }
 
