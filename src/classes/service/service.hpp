@@ -1,33 +1,24 @@
-/*
-* routine.hpp
-* 
-* Author: Carlos Craveiro (@CarlosCraveiro)
-* Created On: September 11, 2021
-* 
-*/
 
 #pragma once
-#include <string>
 #include <mutex>
+#include <string>
 
-class Status {
-	public:
-		enum stateT { 
-			MISSINGDEPENDENCIES = 0, UNINITIALIZED, INITIALIZED, RUNNING, STOPED, DEAD
+class IService {
+public:
+    std::string m_serviceId;
 
-		};
-		stateT state;
-		std::mutex mtx;
-};
+protected:
+    //	DBusHandler::DBusHandler m_dbus;
 
-class IRoutine {
-	public:
-		std::string id;
-	public:
-		virtual void onLoad()=0;
-		virtual void loop()=0;
-		virtual void unload()=0;
-		IRoutine(std::string id): id{id} {}
-		~IRoutine(void){};
+public:
+    virtual void setup() = 0;
+    virtual void routine() = 0;
+    virtual void destroy() = 0;
+    explicit IService(std::string serviceId)
+        : m_serviceId { serviceId }
+    {
+    }
+
+	virtual ~IService() = default;
 };
 
