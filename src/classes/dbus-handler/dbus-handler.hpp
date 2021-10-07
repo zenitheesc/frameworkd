@@ -39,23 +39,23 @@ public:
     };
 
 private:
-    std::string _serviceName;
-    bool _started;
-    bool _isServer;
+    std::string m_serviceName;
+    bool m_started;
+    bool m_isServer;
 
-    std::unique_ptr<sdbus::IConnection> _connection;
+    std::unique_ptr<sdbus::IConnection> m_connection;
 
-    DBusObjectMap _DBusObjects;
-    DBusProxyMap _DBusProxys;
+    DBusObjectMap m_DBusObjects;
+    DBusProxyMap m_DBusProxys;
 
     sdbus::IProxy* findProxy(const DBusHandler::Path& path);
 
     sdbus::IObject* findObject(const DBusHandler::Path& path);
 
 public:
-    DBusHandler(const std::string& serviceName);
+    DBusHandler();
 
-    DBusHandler(const std::string& serviceName, bool isServer);
+    DBusHandler(const std::string& serviceName);
 
     DBusHandler(const std::string& serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys);
 

@@ -3,10 +3,11 @@
 sdbus::IObject* DBusHandler::findObject(const DBusHandler::Path& path)
 {
     try {
-        return _DBusObjects.at(path.objectPath).get();
+        return m_DBusObjects.at(path.objectPath).get();
     } catch (std::out_of_range& e) {
-        _DBusObjects[path.objectPath] = sdbus::createObject(*_connection, path.objectPath);
-        return _DBusObjects[path.objectPath].get();
+
+        m_DBusObjects[path.objectPath] = sdbus::createObject(*m_connection, path.objectPath);
+        return m_DBusObjects[path.objectPath].get();
     }
 }
 
@@ -15,31 +16,33 @@ sdbus::IProxy* DBusHandler::findProxy(const DBusHandler::Path& path)
     const std::string uniqueId = path.service + path.objectPath;
 
     try {
-        return _DBusProxys.at(uniqueId).get();
+
+        return m_DBusProxys.at(uniqueId).get();
     } catch (std::out_of_range& e) {
-        _DBusProxys[uniqueId] = sdbus::createProxy(path.service, path.objectPath);
-        return _DBusProxys[uniqueId].get();
+
+        m_DBusProxys[uniqueId] = sdbus::createProxy(path.service, path.objectPath);
+        return m_DBusProxys[uniqueId].get();
     }
 }
 
 DBusHandler::DBusHandler(const std::string& serviceName)
-    : _isServer { true }
-    , _serviceName { serviceName }
+    : m_isServer { true }
+    , m_serviceName { serviceName }
 {
-    _connection = sdbus::createSystemBusConnection(serviceName);
+
+    m_connection = sdbus::createSystemBusConnection(serviceName);
 }
 
-DBusHandler::DBusHandler(const std::string& serviceName, bool isServer)
-    : _isServer { isServer }
-    , _serviceName { serviceName }
-{
-    if (isServer) {
-        _connection = sdbus::createSystemBusConnection(serviceName);
-    }
-}
+DBusHandler::DBusHandler()
+    : m_isServer { false } {};
 
 void DBusHandler::registerMethod(const DBusHandler::Path& path, DBusCallback&& callback)
 {
+    if (!m_isServer)
+        throw std::logic_error("Only servers can register methods");
+    if (m_started)
+        throw std::logic_error("methods should be register before finishing the handler");
+
     sdbus::IObject* object = findObject(path);
 
     auto wrapper = [callback](sdbus::MethodCall call) {
@@ -74,6 +77,11 @@ void DBusHandler::subscribeToSignal(const DBusHandler::Path& path, DBusVoidCallb
 
 void DBusHandler::registerSignal(const DBusHandler::Path& path)
 {
+    if (!m_isServer)
+        throw std::logic_error("Only servers can register signals");
+    if (m_started)
+        throw std::logic_error("register signals is only possible before finishing the handler");
+
     sdbus::IObject* object = findObject(path);
     object->registerSignal(path.interface, path.functionality, "ay");
 }
@@ -89,7 +97,6 @@ nlohmann::json DBusHandler::callMethod(const DBusHandler::Path& path, nlohmann::
 
     std::vector<u_int8_t> bson;
     reply >> bson;
-
     return nlohmann::json::from_bson(bson);
 }
 
@@ -112,8 +119,10 @@ void DBusHandler::callMethodAsync(const DBusHandler::Path& path, nlohmann::json 
 
 void DBusHandler::emitSignal(const DBusHandler::Path& path, nlohmann::json arg)
 {
-    if (!_started)
-        return; // add error
+    if (!m_isServer)
+        throw std::logic_error("Only servers can emit signals");
+    if (!m_started)
+        throw std::logic_error("emit a signal is only possible after finishing the handler");
 
     sdbus::IObject* object = findObject(path);
 
@@ -126,6 +135,12 @@ void DBusHandler::emitSignal(const DBusHandler::Path& path, nlohmann::json arg)
 void DBusHandler::exposeProperty(const DBusHandler::Path& path, std::function<nlohmann::json()>&& getter,
     DBusVoidCallback&& setter)
 {
+
+    if (!m_isServer)
+        throw std::logic_error("Only servers can expose properties");
+    if (m_started)
+        throw std::logic_error("expose a property is only possible before finishing the handler");
+
     sdbus::IObject* object = findObject(path);
 
     auto getterWrapper = [getter]() { return nlohmann::json::to_bson(getter()); };
@@ -162,14 +177,18 @@ void DBusHandler::setProperty(const DBusHandler::Path& path, nlohmann::json arg)
 
 void DBusHandler::finish()
 {
-    for (auto const& proxy : _DBusProxys)
-        proxy.second->finishRegistration();
+    m_started = true;
 
-    for (auto const& object : _DBusObjects)
+    for (auto const& object : m_DBusObjects) {
         object.second->finishRegistration();
+    }
 
-    _started = true;
+    for (auto const& proxy : m_DBusProxys) {
+        proxy.second->finishRegistration();
+    }
 
-    if (_isServer)
-        _connection->enterEventLoop();
+    if (m_isServer) {
+
+        m_connection->enterEventLoop();
+    }
 }
