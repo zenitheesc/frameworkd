@@ -6,33 +6,15 @@
 #include <iostream>
 #include <thread>
 
-DBusHandler::Path m_methodPath {
-    "org.sdbuscpp.concatenator",
-    "/org/sdbuscpp/concatenator",
-    "org.sdbuscpp.Concatenator",
-    "concatenate"
-};
-
-DBusHandler::Path m_signalPath {
-    "org.sdbuscpp.concatenator",
-    "/org/sdbuscpp/concatenator",
-    "org.sdbuscpp.Concatenator",
-    "concatenated"
-};
-
-DBusHandler::Path m_propertiesPath {
-    "org.sdbuscpp.concatenator",
-    "/org/sdbuscpp/concatenator",
-    "org.sdbuscpp.Concatenator",
-    "properties"
-};
-
-bool isServerConfig;
-nlohmann::json m_properties;
-
 class ServerClient : public ::testing::Test {
 public:
     DBusHandler m_client {};
+
+    static DBusHandler::Path m_methodPath;
+    static DBusHandler::Path m_signalPath;
+    static DBusHandler::Path m_propertiesPath;
+    static bool isServerConfig;
+    static nlohmann::json m_properties;
 
     static void SetUpTestSuite()
     {
@@ -65,6 +47,30 @@ public:
         server.finish();
     }
 };
+
+DBusHandler::Path ServerClient::m_methodPath {
+    "org.sdbuscpp.concatenator",
+    "/org/sdbuscpp/concatenator",
+    "org.sdbuscpp.Concatenator",
+    "concatenate"
+};
+
+DBusHandler::Path ServerClient::m_signalPath {
+    "org.sdbuscpp.concatenator",
+    "/org/sdbuscpp/concatenator",
+    "org.sdbuscpp.Concatenator",
+    "concatenated"
+};
+
+DBusHandler::Path ServerClient::m_propertiesPath {
+    "org.sdbuscpp.concatenator",
+    "/org/sdbuscpp/concatenator",
+    "org.sdbuscpp.Concatenator",
+    "properties"
+};
+
+bool ServerClient::isServerConfig;
+nlohmann::json ServerClient::m_properties;
 
 TEST_F(ServerClient, Method)
 {
