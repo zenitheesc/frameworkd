@@ -4,6 +4,22 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 
+class AtomicJson : public nlohmann::json {
+private:
+    std::mutex m_mutex;
+
+public:
+    AtomicJson() = default;
+    explicit AtomicJson(nlohmann::json json)
+        : nlohmann::json { json } {};
+
+    template <typename T>
+    auto operator=(T& value) -> AtomicJson&;
+
+    template <typename T>
+    auto operator[](const T& field) -> AtomicJson;
+};
+
 class LockedStorage {
 private:
     static LockedStorage* s_instance;
