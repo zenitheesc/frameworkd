@@ -16,25 +16,24 @@ void Status::setState(Status::stateT newState)
     m_state = newState;
 }
 
-void ServiceProxy::servicePod(IService& service, Status& status)
+void ServiceProxy::servicePod()
 {
 
-    service.setup();
-    status.setState(Status::RUNNING);
+    m_realService.setup();
+    m_status.setState(Status::RUNNING);
 
-    while (status.getState() != Status::STOPPED) {
+    while (m_status.getState() != Status::STOPPED) {
 
-        service.routine();
+        m_realService.routine();
     }
 
-    service.destroy();
+    m_realService.destroy();
 }
 
 ServiceProxy::ServiceProxy(IService& service, nlohmann::json configs)
-    : m_innerService(service)
+    : m_realService(service)
+    , m_dependencies(configs)
 {
-    m_dependencies.data = configs; //DETAILS ABOUT DEPENDENCIES
-
     m_status.setState(Status::UNINITIALIZED);
     if (configs["dependencies"] == 0) {
         run();
@@ -51,7 +50,7 @@ ServiceProxy::~ServiceProxy()
 
 void ServiceProxy::run()
 {
-    std::thread thread(&servicePod, std::ref(m_innerService), std::ref(m_status), this);
+    std::thread thread(&ServiceProxy::servicePod, this);
     m_status.setState(Status::INITIALIZED);
     std::swap(thread, m_innerThread);
 }
@@ -66,8 +65,8 @@ void ServiceProxy::stop()
 auto ServiceProxy::getStatus() -> nlohmann::json
 {
     auto currStatus = m_status.getState();
-    std::lock_guard<std::mutex> lock(m_dependencies.mtx);
+    std::lock_guard<std::mutex> lock(m_dependencies.m_mtx);
 
-    return (nlohmann::json) { { "serviceId", m_dependencies.data["serviceId"] }, { "State", currStatus } };
+    return (nlohmann::json) { { "serviceId", m_dependencies.m_data["serviceId"] }, { "State", currStatus } };
 }
 

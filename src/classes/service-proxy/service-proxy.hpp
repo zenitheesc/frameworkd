@@ -4,12 +4,13 @@
 #include <mutex>
 #include <nlohmann/json.hpp>
 #include <thread>
+#include <utility>
 
 class Status {
 public:
     /*enum for the possible service-thread states*/
     enum stateT {
-        MISSINGDEPENDENCIES = 0,
+        MISSING_DEPENDENCIES = 0,
         UNINITIALIZED,
         INITIALIZED,
         RUNNING,
@@ -43,14 +44,19 @@ public:
 class ServiceProxy {
 private:
     /* a reference for a Service implemented by the user */
-    IService& m_innerService;
+    IService& m_realService;
 
     /* structure made to allow the use of the service-proxy 
 	 * conf-file in multiples threads.
 	 */
-    struct SafeJson {
-        nlohmann::json data;
-        std::mutex mtx;
+    class SafeJson {
+    public:
+        nlohmann::json m_data;
+        std::mutex m_mtx;
+        SafeJson(nlohmann::json data)
+            : m_data(data)
+        {
+        }
     };
 
     /* json thread-safe that will contain the service-proxy conf-file */
@@ -109,6 +115,6 @@ private:
  	 * @brief	function that encapsulates the class @ref IService
 	 * 			to be runned in a thread as explicit in @ref run
  	 */
-    void servicePod(IService& service, Status& status);
+    void servicePod();
 };
 

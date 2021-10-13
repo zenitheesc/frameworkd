@@ -5,53 +5,48 @@
 
 class IService {
 public:
-    /* Id of the service */
-	std::string m_serviceId;
+  /* Id of the service */
+  std::string m_serviceId;
 
 protected:
-
-    //	DBusHandler::DBusHandler m_dbus;
+  //	DBusHandler::DBusHandler m_dbus;
 
 public:
-    
-	/**
-	 * @brief	An interface function to be implemented by 
-	 * 			the user to make the "setup"/configuration 
-	 * 			of its class' parameter-members.
-	 */
-	virtual void setup() = 0;
-    
-	/**
-	 * @brief	An interface function to be implemented
-	 * 			by the user. This function is going to 
-	 * 			run in a loop, so its instructions are 
-	 * 			going to be executed "routinely".
-	 */
-	virtual void routine() = 0;
-    
-	/**
-	 * @brief	An interface function to be implemented by
-	 * 			the user to execute the needed instructions
-	 * 			to safely "destroy" the resources used by the 
-	 * 			class' previous functions.
-	 */
-	virtual void destroy() = 0;
-    
-	/**
-	 * @brief	The constructor of this interface.
-	 * 
-	 * @param	serviceId std::string that is the id related
-	 * 			to the instantiated class.
-	 */
-	explicit IService(std::string serviceId)
-        : m_serviceId { serviceId }
-    {
-    }
+  /**
+   * @brief	An interface function to be implemented by
+   * 			the user to make the "setup"/configuration
+   * 			of its class' parameter-members.
+   */
+  virtual void setup() = 0;
 
-	/**
-	 * @brief	A virtual destructor to ensure 
-	 * 			inheriance compatibility.
-	 */
-	virtual ~IService() = default;
+  /**
+   * @brief	An interface function to be implemented
+   * 			by the user. This function is going to
+   * 			run in a loop, so its instructions are
+   * 			going to be executed "routinely".
+   */
+  virtual void routine() = 0;
+
+  /**
+   * @brief	An interface function to be implemented by
+   * 			the user to execute the needed instructions
+   * 			to safely "destroy" the resources used by the
+   * 			class' previous functions.
+   */
+  virtual void destroy() = 0;
+
+  /**
+   * @brief	The constructor of this interface.
+   *
+   * @param	serviceId std::string that is the id related
+   * 			to the instantiated class.
+   */
+  explicit IService(std::string serviceId) : m_serviceId{serviceId} {}
+
+  /**
+   * @brief	A virtual destructor to ensure
+   * 			inheriance compatibility.
+   */
+  virtual ~IService() = default;
 };
 
