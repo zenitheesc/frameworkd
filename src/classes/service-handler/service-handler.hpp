@@ -1,14 +1,9 @@
-/*
- * service.hpp
- *
- * Author: Carlos Craveiro (@CarlosCraveiro)
- * Created On: September 15, 2021
- */
 
 #pragma once
 #include <thread>
 #include <mutex>
-#include "../routine-handler/routine-handler.hpp"
+#include "../service-proxy/service-proxy.hpp"
+#include "../service/service.hpp"
 
 class Service {
 	public:

@@ -13,7 +13,7 @@ public:
         UNINITIALIZED,
         INITIALIZED,
         RUNNING,
-        STOPED,
+        STOPPED,
         DEAD
     };
 
@@ -109,6 +109,6 @@ private:
  	 * @brief	function that encapsulates the class @ref IService
 	 * 			to be runned in a thread as explicit in @ref run
  	 */
-    static void servicePod(IService& service, Status& status);
+    void servicePod(IService& service, Status& status);
 };
 

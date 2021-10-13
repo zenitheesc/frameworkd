@@ -22,7 +22,7 @@ void ServiceProxy::servicePod(IService& service, Status& status)
     service.setup();
     status.setState(Status::RUNNING);
 
-    while (status.getState() != Status::STOPED) {
+    while (status.getState() != Status::STOPPED) {
 
         service.routine();
     }
@@ -51,14 +51,14 @@ ServiceProxy::~ServiceProxy()
 
 void ServiceProxy::run()
 {
-    std::thread thread(servicePod, std::ref(m_innerService), std::ref(m_status));
+    std::thread thread(&servicePod, std::ref(m_innerService), std::ref(m_status), this);
     m_status.setState(Status::INITIALIZED);
     std::swap(thread, m_innerThread);
 }
 
 void ServiceProxy::stop()
 {
-    m_status.setState(Status::STOPED);
+    m_status.setState(Status::STOPPED);
     m_innerThread.join();
     m_status.setState(Status::DEAD);
 }
