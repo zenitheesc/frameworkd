@@ -1,21 +1,21 @@
-
 #pragma once
-#include <thread>
-#include <mutex>
 #include "../service-proxy/service-proxy.hpp"
 #include "../service/service.hpp"
+#include <map>
+#include <nlohmann/json.hpp>
+#include <string>
 
-class Service {
-	public:
-		 std::vector<RoutineHandler> routines;
-		 std::vector<EndpointHandler> endpoints;
-	public:
-		 nlohmann::json getServiceStatus(void);
-		nlohmann::json updateAll(nlohmann::json updateList);
-		nlohmann::json registerEndpoints(void);
-		nlohmann::json registerRoutines(void);
+class ServiceHandler {
+//private:
+public:
+    std::map<std::string, ServiceProxy> m_serviceMap;
+    nlohmann::json m_servicesConfigs;
 
-		void buildEndpoint(/*IEndpoint& newEndpoint*/);
-		void buildRoutine(IRoutine& newRoutine);
+public:
+    auto getProxyStatus(std::string serviceId) -> nlohmann::json;
+    auto getAllProxyStatus() -> nlohmann::json;
+
+    void buildServiceProxy(IService& userService);
+    explicit ServiceHandler(nlohmann::json servicesConfigs);
 };
 
