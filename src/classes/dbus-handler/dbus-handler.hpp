@@ -53,7 +53,7 @@ private:
     auto findObject(const DBusHandler::Path& path) -> sdbus::IObject*;
 
 public:
-    DBusHandler() = default;
+    DBusHandler();
 
     explicit DBusHandler(const std::string& serviceName);
 

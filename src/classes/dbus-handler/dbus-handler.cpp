@@ -39,7 +39,7 @@ void DBusHandler::registerMethod(const DBusHandler::Path& path, DBusCallback&& c
     }
 
     if (m_started) {
-        throw std::logic_error("methods should be register before finishing the handler");
+        throw std::logic_error("Methods should be register before finishing the handler");
     }
 
     sdbus::IObject* object = findObject(path);
