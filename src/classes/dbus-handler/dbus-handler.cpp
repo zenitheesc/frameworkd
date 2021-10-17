@@ -1,5 +1,15 @@
 #include "dbus-handler.hpp"
 
+DBusHandler::DBusHandler(const std::string& serviceName)
+    : m_isServer { true }
+    , m_serviceName { serviceName }
+{
+    m_connection = sdbus::createSystemBusConnection(serviceName);
+}
+
+DBusHandler::DBusHandler()
+    : m_isServer { false } {};
+
 auto DBusHandler::findObject(const DBusHandler::Path& path) -> sdbus::IObject*
 {
     try {
@@ -21,16 +31,6 @@ auto DBusHandler::findProxy(const DBusHandler::Path& path) -> sdbus::IProxy*
         return m_DBusProxys[uniqueId].get();
     }
 }
-
-DBusHandler::DBusHandler(const std::string& serviceName)
-    : m_isServer { true }
-    , m_serviceName { serviceName }
-{
-    m_connection = sdbus::createSystemBusConnection(serviceName);
-}
-
-DBusHandler::DBusHandler()
-    : m_isServer { false } {};
 
 void DBusHandler::registerMethod(const DBusHandler::Path& path, DBusCallback&& callback)
 {
