@@ -1,72 +1,247 @@
 #include "service-proxy.hpp"
+#include <iostream>
+#include <iterator>
 
 auto Status::getState() -> Status::stateT
 {
-
-    const std::lock_guard<std::mutex> lock(m_mtx);
-
     return m_state;
 }
 
-void Status::setState(Status::stateT newState)
+ServiceProxy::ProxyConfigs::ProxyConfigs(std::map<std::string, Status::stateT> depsMap)
 {
+    std::map<std::string, Status::stateT>::iterator itr;
 
-    const std::lock_guard<std::mutex> lock(m_mtx);
+    for (itr = depsMap.begin(); itr != depsMap.end(); itr++) {
 
-    m_state = newState;
+        m_depsMap.emplace(itr->first, Dependencie(itr->second, Status::UNKNOWN));
+    }
 }
 
-void ServiceProxy::servicePod()
+void ServiceProxy::ProxyConfigs::changeDep(std::string dependencieId, Status::stateT currState)
+{
+    m_depsMap[dependencieId].m_currState = currState;
+}
+
+void staticService::MissingDependencies::allFine()
 {
 
-    m_realService.setup();
-    m_status.setState(Status::RUNNING);
+    stateT newState = UNINITIALIZED;
+    if (m_upperProxy->m_runnedOnce) {
 
-    while (m_status.getState() != Status::STOPPED) {
+        newState = STAND_BY;
+    }
+
+    m_upperProxy->changeState(newState);
+}
+
+
+// Uninitialized and StandBy Constructor will expose the endpoint on the DBUS
+
+void staticService::Uninitialized::somethingIsMissing()
+{
+    // Unexpose/Hide the endpoint on the DBUS and THEN..
+    m_upperProxy->changeState(MISSING_DEPENDENCIES);
+}
+
+void staticService::StandBy::somethingIsMissing()
+{
+    // Unexpose/Hide the endpoint on the DBUS and THEN...
+    m_upperProxy->changeState(MISSING_DEPENDENCIES);
+}
+
+staticService::Proxy::Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap)
+    : ServiceProxy(realService, STATIC_SERVICE, depsMap)
+{
+    autoUpdate();
+}
+
+staticService::Proxy::~Proxy()
+{
+    delete m_status;
+}
+
+void staticService::Proxy::autoUpdate()
+{
+    bool noMissingDependencies = true;
+
+    std::map<std::string, ProxyConfigs::Dependencie>::iterator itr;
+
+    for (itr = m_proxyConfigs.m_depsMap.begin(); itr != m_proxyConfigs.m_depsMap.end(); itr++) {
+        if (itr->second.m_currState != itr->second.m_reqrState) {
+            noMissingDependencies = false;
+        }
+    }
+
+    (noMissingDependencies) ? m_status->allFine() : m_status->somethingIsMissing();
+}
+
+void staticService::Proxy::serviceCycle()
+{
+    changeState(Status::RUNNING);
+    m_realService.setup();
+    m_realService.destroy();
+    changeState(Status::STAND_BY);
+}
+
+void staticService::Proxy::changeState(Status::stateT newState)
+{
+     const std::lock_guard<std::mutex> lock(m_statusMtx);
+
+    switch (newState) {
+    case Status::MISSING_DEPENDENCIES:
+        delete m_status;
+        m_status = new MissingDependencies(this, &m_statusMtx);
+        break;
+    case Status::UNINITIALIZED:
+        delete m_status;
+        m_status = new Uninitialized(this, &m_statusMtx);
+        break;
+    case Status::RUNNING:
+        delete m_status;
+        m_status = new Running(this, &m_statusMtx);
+        break;
+    case Status::STAND_BY:
+        delete m_status;
+        m_status = new StandBy(this, &m_statusMtx);
+        break;
+    case Status::STOPPED:
+    case Status::UNKNOWN:
+    case Status::FINISHED:
+        std::cout << "ERROR!! This was not supose to happen!! - Static Service" << std::endl;
+    };
+}
+
+auto staticService::Proxy::checkState() -> Status::stateT
+{
+    const std::lock_guard<std::mutex> lock(m_statusMtx);
+    return m_status->getState();
+}
+
+auto staticService::Proxy::reportStatus() -> nlohmann::json
+{
+    Status::stateT currStatus = checkState();
+
+    return (nlohmann::json) { { "serviceId", m_realServiceId }, { "State", currStatus } };
+}
+
+
+
+
+
+
+
+
+routineService::Proxy::Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap)
+    : ServiceProxy(realService, ROUTINE_SERVICE, depsMap)
+{
+    autoUpdate();
+}
+
+routineService::Proxy::~Proxy()
+{
+    delete m_status;
+}
+
+
+void routineService::MissingDependencies::allFine()
+{
+    // Expose/Hide the endpoint on the DBUS and THEN..
+    m_upperProxy->weave();
+}
+
+void routineService::Running::somethingIsMissing()
+{
+    // Unexpose/Hide the endpoint on the DBUS and THEN..
+    m_upperProxy->cut();
+}
+
+void routineService::Proxy::serviceCycle()
+{
+    changeState(Status::RUNNING);
+    m_realService.setup();
+
+    while (checkState() != Status::STOPPED) {
 
         m_realService.routine();
     }
 
     m_realService.destroy();
+
+    changeState(Status::FINISHED);
 }
 
-ServiceProxy::ServiceProxy(IService& service, nlohmann::json configs)
-    : m_realService(service)
-    , m_dependencies(configs)
+void routineService::Proxy::weave()
 {
-    m_status.setState(Status::UNINITIALIZED);
-    if (configs["dependencies"] == 0) {
-        run();
-    }
+    const std::lock_guard<std::mutex> lock(m_updateMtx);
+    changeState(Status::STAND_BY);
+    std::thread thread(&routineService::Proxy::serviceCycle, this);
+    std::swap(thread, m_thread);
 }
 
-ServiceProxy::~ServiceProxy()
+void routineService::Proxy::cut()
 {
-    auto currState = m_status.getState();
-    if (currState == Status::RUNNING) {
-        stop();
-    }
+    const std::lock_guard<std::mutex> lock(m_updateMtx);
+    changeState(Status::STOPPED);
+    m_thread.join();
+    changeState(Status::MISSING_DEPENDENCIES);
 }
 
-void ServiceProxy::run()
+void routineService::Proxy::autoUpdate()
 {
-    std::thread thread(&ServiceProxy::servicePod, this);
-    m_status.setState(Status::INITIALIZED);
-    std::swap(thread, m_innerThread);
+    bool noMissingDependencies = true;
+
+        std::map<std::string, ProxyConfigs::Dependencie>::iterator itr;
+
+        for (itr = m_proxyConfigs.m_depsMap.begin(); itr != m_proxyConfigs.m_depsMap.end(); itr++) {
+            if (itr->second.m_currState != itr->second.m_reqrState) {
+                noMissingDependencies = false;
+            }
+        }
+
+    (noMissingDependencies) ? m_status->allFine() : m_status->somethingIsMissing();
 }
 
-void ServiceProxy::stop()
+void routineService::Proxy::changeState(Status::stateT newState)
 {
-    m_status.setState(Status::STOPPED);
-    m_innerThread.join();
-    m_status.setState(Status::DEAD);
+     const std::lock_guard<std::mutex> lock(m_statusMtx);
+
+    switch (newState) {
+    case Status::MISSING_DEPENDENCIES:
+        delete m_status;
+        m_status = new MissingDependencies(this, &m_statusMtx, &m_updateMtx);
+        break;
+    case Status::RUNNING:
+        delete m_status;
+        m_status = new Running(this, &m_statusMtx, &m_updateMtx);
+        break;
+    case Status::STAND_BY:
+        delete m_status;
+        m_status = new StandBy(this, &m_statusMtx, &m_updateMtx);
+        break;
+    case Status::STOPPED:
+        delete m_status;
+        m_status = new Stopped(this, &m_statusMtx, &m_updateMtx);
+        break;
+    case Status::FINISHED:
+        delete m_status;
+        m_status = new Finished(this, &m_statusMtx, &m_updateMtx);
+        break;
+    case Status::UNINITIALIZED:
+    case Status::UNKNOWN:
+        std::cout << "ERROR!! This was not supose to happen!! - Routine Service" << std::endl;
+    };
 }
 
-auto ServiceProxy::getStatus() -> nlohmann::json
+auto routineService::Proxy::checkState() -> Status::stateT
 {
-    auto currStatus = m_status.getState();
-    std::lock_guard<std::mutex> lock(m_dependencies.m_mtx);
+    const std::lock_guard<std::mutex> lock(m_statusMtx);
+    return m_status->getState();
+}
 
-    return (nlohmann::json) { { "serviceId", m_dependencies.m_data["serviceId"] }, { "State", currStatus } };
+auto routineService::Proxy::reportStatus() -> nlohmann::json
+{
+    Status::stateT currStatus = checkState();
+
+    return (nlohmann::json) { { "serviceId", m_realServiceId }, { "State", currStatus } };
 }
 
