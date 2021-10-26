@@ -13,7 +13,10 @@ ServiceProxy::ProxyConfigs::ProxyConfigs(std::map<std::string, Status::stateT> d
 
     for (itr = depsMap.begin(); itr != depsMap.end(); itr++) {
 
-        m_depsMap.emplace(itr->first, Dependencie(itr->second, Status::UNKNOWN));
+        //m_depsMap.emplace(itr->first, Dependencie(itr->second, Status::UNKNOWN));
+        m_depsMap.emplace(std::piecewise_construct,
+            std::forward_as_tuple(itr->first),
+            std::forward_as_tuple(itr->second, Status::UNKNOWN));
     }
 }
 
@@ -34,7 +37,6 @@ void staticService::MissingDependencies::allFine()
     m_upperProxy->changeState(newState);
 }
 
-
 // Uninitialized and StandBy Constructor will expose the endpoint on the DBUS
 
 void staticService::Uninitialized::somethingIsMissing()
@@ -52,6 +54,7 @@ void staticService::StandBy::somethingIsMissing()
 staticService::Proxy::Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap)
     : ServiceProxy(realService, STATIC_SERVICE, depsMap)
 {
+    changeState(Status::MISSING_DEPENDENCIES);
     autoUpdate();
 }
 
@@ -85,7 +88,7 @@ void staticService::Proxy::serviceCycle()
 
 void staticService::Proxy::changeState(Status::stateT newState)
 {
-     const std::lock_guard<std::mutex> lock(m_statusMtx);
+    const std::lock_guard<std::mutex> lock(m_statusMtx);
 
     switch (newState) {
     case Status::MISSING_DEPENDENCIES:
@@ -124,16 +127,10 @@ auto staticService::Proxy::reportStatus() -> nlohmann::json
     return (nlohmann::json) { { "serviceId", m_realServiceId }, { "State", currStatus } };
 }
 
-
-
-
-
-
-
-
 routineService::Proxy::Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap)
     : ServiceProxy(realService, ROUTINE_SERVICE, depsMap)
 {
+    changeState(Status::MISSING_DEPENDENCIES);
     autoUpdate();
 }
 
@@ -141,7 +138,6 @@ routineService::Proxy::~Proxy()
 {
     delete m_status;
 }
-
 
 void routineService::MissingDependencies::allFine()
 {
@@ -190,20 +186,20 @@ void routineService::Proxy::autoUpdate()
 {
     bool noMissingDependencies = true;
 
-        std::map<std::string, ProxyConfigs::Dependencie>::iterator itr;
+    std::map<std::string, ProxyConfigs::Dependencie>::iterator itr;
 
-        for (itr = m_proxyConfigs.m_depsMap.begin(); itr != m_proxyConfigs.m_depsMap.end(); itr++) {
-            if (itr->second.m_currState != itr->second.m_reqrState) {
-                noMissingDependencies = false;
-            }
+    for (itr = m_proxyConfigs.m_depsMap.begin(); itr != m_proxyConfigs.m_depsMap.end(); itr++) {
+        if (itr->second.m_currState != itr->second.m_reqrState) {
+            noMissingDependencies = false;
         }
+    }
 
     (noMissingDependencies) ? m_status->allFine() : m_status->somethingIsMissing();
 }
 
 void routineService::Proxy::changeState(Status::stateT newState)
 {
-     const std::lock_guard<std::mutex> lock(m_statusMtx);
+    const std::lock_guard<std::mutex> lock(m_statusMtx);
 
     switch (newState) {
     case Status::MISSING_DEPENDENCIES:

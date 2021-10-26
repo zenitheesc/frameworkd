@@ -25,7 +25,8 @@ protected:
     virtual void allFine() { }
     auto getState() -> stateT;
     Status(stateT state, std::mutex* const statusMtx)
-        : m_state(state), m_statusMtx(statusMtx)
+        : m_state(state)
+        , m_statusMtx(statusMtx)
     {
     }
 };
@@ -58,22 +59,33 @@ protected:
 
     proxyT m_proxyType;
     std::mutex m_statusMtx;
+
+public://temporary
     ProxyConfigs m_proxyConfigs;
+protected:
     std::string m_realServiceId;
     IService& m_realService;
 
-    virtual void serviceCycle() { }
     virtual void changeState(Status::stateT newState) { }
+
+public://temporary
     virtual void autoUpdate() { }
+    virtual void serviceCycle() { }
+
+protected:
+
+public:
     virtual auto reportStatus() -> nlohmann::json { return { {} }; }
 
     ServiceProxy(IService& realService, proxyT proxyType, std::map<std::string, Status::stateT> depsMap)
         : m_realService(realService)
         , m_proxyType(proxyType)
-        , m_proxyConfigs(depsMap),
-        m_realServiceId(realService.m_serviceId)
+        , m_proxyConfigs(depsMap)
+        , m_realServiceId(realService.m_serviceId)
     {
     }
+
+    virtual ~ServiceProxy() = default;
 };
 
 namespace staticService {
@@ -137,16 +149,19 @@ class Proxy : public ServiceProxy {
 protected:
     bool m_runnedOnce;
     SStatus* m_status;
+
     void changeState(Status::stateT newState) override;
+public:
     void serviceCycle() override;
+protected:
     void autoUpdate() override;
     auto checkState() -> Status::stateT;
-    Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap);
-    ~Proxy();
-
 
 public:
-    auto reportStatus()-> nlohmann::json override;
+    Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap);
+    ~Proxy() override;
+
+    auto reportStatus() -> nlohmann::json override;
     void execute() { serviceCycle(); } // Temporary!!!
 };
 } // namespace staticService
@@ -161,8 +176,8 @@ public:
     Proxy* const m_upperProxy;
 
     RStatus(stateT state, Proxy* const upperProxy, std::mutex* const statusMtx, std::mutex* const updateMtx)
-        : m_upperProxy(upperProxy),
-        m_updateMtx(updateMtx)
+        : m_upperProxy(upperProxy)
+        , m_updateMtx(updateMtx)
         , Status(state, statusMtx)
     {
     }
@@ -230,10 +245,12 @@ protected:
     auto checkState() -> Status::stateT;
     void weave();
     void cut();
-    Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap);
-    ~Proxy();
+
 public:
-    auto reportStatus()-> nlohmann::json override;
+    Proxy(IService& realService, std::map<std::string, Status::stateT> depsMap);
+    ~Proxy() override;
+
+    auto reportStatus() -> nlohmann::json override;
 };
 } // namespace routineService
 
