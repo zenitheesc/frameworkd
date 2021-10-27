@@ -2,7 +2,7 @@
 #pragma once
 #include <mutex>
 #include <string>
-
+#include <iostream>
 class IService {
 public:
     /* Id of the service */
@@ -26,7 +26,7 @@ public:
    *        this function is going to run in a loop, so its 
    *        instructions are going to be executed "routinely".
    */
-    void routine() { }
+    virtual void routine() {}
 
   /**
    * @brief	An interface function to be implemented by
