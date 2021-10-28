@@ -1,4 +1,4 @@
-<h1 align="center" style="color:white; background-color:black">Daemons Framework</h1>
+<h1 align="center" style="color:white; background-color:black">Frameworkd</h1>
 <h4 align="center">A framework for creating daemons in our architecture</h4>
 
 <p align="center">
