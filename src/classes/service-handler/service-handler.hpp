@@ -1,22 +1,25 @@
 #pragma once
+#include "../iservice/iservice.hpp"
+#include "../routine-service-proxy/routine-service-proxy.hpp"
 #include "../service-proxy/service-proxy.hpp"
-#include "../service/service.hpp"
+#include "../static-service-proxy/static-service-proxy.hpp"
 #include <map>
+#include <memory>
 #include <nlohmann/json.hpp>
 #include <string>
 
 class ServiceHandler {
-//private:
-public:
-    std::map<std::string, ServiceProxy*> m_serviceMap;
-    std::map<std::string, std::map<std::string, Status::stateT>> m_proxyDepsMap;
+protected:
+    friend class Tester;
+
+    std::map<std::string, std::unique_ptr<ServiceProxy>> m_serviceMap;
+    std::map<std::string, std::map<std::string, ServiceProxy::ServiceState::stateT>> m_proxyDepsMap;
 
 public:
-    auto getProxyStatus(std::string serviceId) -> nlohmann::json;
-    auto getAllProxyStatus() -> nlohmann::json;
+    auto getProxyState(std::string serviceId) -> nlohmann::json;
+    auto getAllProxyState() -> nlohmann::json;
 
     void buildServiceProxy(IService& userService, ServiceProxy::proxyT proxyType);
     explicit ServiceHandler(nlohmann::json servicesConfigs);
-    ~ServiceHandler();
 };
 
