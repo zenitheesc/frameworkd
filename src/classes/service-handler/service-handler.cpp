@@ -12,17 +12,18 @@ ServiceHandler::ServiceHandler(nlohmann::json servicesConfigs)
     }
 }
 
-void ServiceHandler::buildServiceProxy(IService& userService, ServiceProxy::proxyT proxyType)
+void ServiceHandler::buildServiceProxy(StaticService& userService)
 {
-    if (proxyType == ServiceProxy::STATIC_SERVICE) {
         m_serviceMap.emplace(std::make_pair(
                 std::string(userService.m_serviceId),
                 std::make_unique<StaticServiceProxy>(userService, m_proxyDepsMap.at(userService.m_serviceId))));
-    } else {
+}
+
+void ServiceHandler::buildServiceProxy(RoutineService& userService)
+{
         m_serviceMap.emplace(std::make_pair(
                 std::string(userService.m_serviceId),
                 std::make_unique<RoutineServiceProxy>(userService, m_proxyDepsMap.at(userService.m_serviceId))));
-    }
 }
 
 auto ServiceHandler::getProxyState(std::string serviceId) -> nlohmann::json
@@ -42,3 +43,10 @@ auto ServiceHandler::getAllProxyState() -> nlohmann::json
     return allStates;
 }
 
+void ServiceHandler::run() {
+    
+    for (auto& [serviceId , proxy] : m_serviceMap) {
+        proxy->m_proxyConfigs.changeDep("THIS", ServiceProxy::ServiceState::RUNNING);
+        proxy->autoUpdate();
+    }
+}

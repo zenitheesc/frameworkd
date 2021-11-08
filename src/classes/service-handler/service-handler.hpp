@@ -18,8 +18,10 @@ protected:
 public:
     auto getProxyState(std::string serviceId) -> nlohmann::json;
     auto getAllProxyState() -> nlohmann::json;
+    void buildServiceProxy(StaticService& userService);
+    void buildServiceProxy(RoutineService& userService);
+    void run();
 
-    void buildServiceProxy(IService& userService, ServiceProxy::proxyT proxyType);
     explicit ServiceHandler(nlohmann::json servicesConfigs);
 };
 
