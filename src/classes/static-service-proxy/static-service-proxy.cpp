@@ -54,7 +54,7 @@ void StaticServiceProxy::StaticServiceProxy::changeState(ServiceState::state_t n
         m_state = std::make_unique<StandBy>(*this);
         break;
     default:
-        std::cout << "ERROR!! This was not supposed to happen!! - Static Service" << std::endl;
+        throw std::logic_error("Static Services should not have other States!");
     }
 }
 
