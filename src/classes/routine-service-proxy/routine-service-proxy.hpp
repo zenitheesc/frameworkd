@@ -4,7 +4,7 @@
 
 class RoutineServiceProxy : public ServiceProxy {
 public:
-    RoutineServiceProxy(IService& realService, std::map<std::string, ServiceState::state_t> depsMap);
+    RoutineServiceProxy(RoutineService& realService, std::map<std::string, ServiceState::state_t> depsMap);
     ~RoutineServiceProxy() override = default;
 
 protected:

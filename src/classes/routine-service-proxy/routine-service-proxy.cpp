@@ -1,6 +1,6 @@
 #include "routine-service-proxy.hpp"
 
-RoutineServiceProxy::RoutineServiceProxy(IService& realService, std::map<std::string, ServiceState::state_t> depsMap)
+RoutineServiceProxy::RoutineServiceProxy(RoutineService& realService, std::map<std::string, ServiceState::state_t> depsMap)
     : ServiceProxy(realService, ROUTINE_SERVICE, depsMap)
 {
     changeState(ServiceState::MISSING_DEPENDENCIES);
