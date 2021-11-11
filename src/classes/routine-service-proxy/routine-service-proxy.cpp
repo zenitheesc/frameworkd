@@ -70,7 +70,7 @@ void RoutineServiceProxy::changeState(ServiceState::state_t newState)
         m_state = std::make_unique<Finished>(*this);
         break;
     default:
-        std::cout << "ERROR!! This was not supose to happen!! - Routine Service" << std::endl;
+        throw std::logic_error("Routine Services should not have other States!");
     }
 }
 
