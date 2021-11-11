@@ -25,14 +25,15 @@ protected:
 
         const state_t m_state;
 
-        virtual void somethingIsMissing() { }
-        virtual void allFine() { }
-        [[nodiscard]] auto getState() const -> state_t;
-
         explicit ServiceState(state_t state)
             : m_state(state)
         {
         }
+
+        virtual void somethingIsMissing() { }
+        virtual void allFine() { }
+        [[nodiscard]] auto getState() const -> state_t;
+
     };
 
     class ProxyConfigs {
@@ -40,6 +41,7 @@ protected:
         struct Dependency {
             ServiceState::state_t m_reqrState;
             ServiceState::state_t m_currState;
+            
             Dependency(ServiceState::state_t reqrState, ServiceState::state_t currState)
                 : m_reqrState(reqrState)
                 , m_currState(currState)
