@@ -9,6 +9,9 @@
 #include <string>
 
 class ServiceHandler {
+public:
+    explicit ServiceHandler(nlohmann::json servicesConfigs);
+
 protected:
     friend class Tester;
 
@@ -21,7 +24,5 @@ public:
     void buildServiceProxy(StaticService& userService);
     void buildServiceProxy(RoutineService& userService);
     void run();
-
-    explicit ServiceHandler(nlohmann::json servicesConfigs);
 };
 
