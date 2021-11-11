@@ -1,6 +1,6 @@
 #include "static-service-proxy.hpp"
 
-StaticServiceProxy::StaticServiceProxy(IService& realService, std::map<std::string, ServiceState::state_t> depsMap)
+StaticServiceProxy::StaticServiceProxy(StaticService& realService, std::map<std::string, ServiceState::state_t> depsMap)
     : m_runnedOnce(false)
     , ServiceProxy(realService, STATIC_SERVICE, depsMap)
 {

@@ -4,7 +4,7 @@
 
 class StaticServiceProxy : public ServiceProxy {
 public:
-    StaticServiceProxy(IService& realService, std::map<std::string, ServiceState::state_t> depsMap);
+    StaticServiceProxy(StaticService& realService, std::map<std::string, ServiceState::state_t> depsMap);
     ~StaticServiceProxy() override = default;
 
 protected:
