@@ -3,6 +3,10 @@
 #include <memory>
 
 class StaticServiceProxy : public ServiceProxy {
+public:
+    StaticServiceProxy(IService& realService, std::map<std::string, ServiceState::state_t> depsMap);
+    ~StaticServiceProxy() override = default;
+
 protected:
     friend class ServiceHandler;
     friend class Tester;
@@ -12,7 +16,7 @@ protected:
         StaticServiceProxy& m_upperProxy;
 
     public:
-        StaticState(stateT state, StaticServiceProxy& upperProxy)
+        StaticState(state_t state, StaticServiceProxy& upperProxy)
             : ServiceState(state)
             , m_upperProxy(upperProxy)
         {
@@ -55,17 +59,8 @@ protected:
     };
 
     bool m_runnedOnce;
-    std::unique_ptr<StaticState> m_status;
 
-    void changeState(ServiceState::stateT newState) override;
+    void changeState(ServiceState::state_t newState) override;
     void serviceCycle() override;
-    void autoUpdate() override;
-    auto checkState() -> ServiceState::stateT;
-
-public:
-    StaticServiceProxy(IService& realService, std::map<std::string, ServiceState::stateT> depsMap);
-    ~StaticServiceProxy() override = default;
-
-    auto reportState() -> nlohmann::json override;
 };
 
