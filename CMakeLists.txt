@@ -47,23 +47,24 @@ endmacro(ZFKD_CREATE_DICT)
 
 set(ZFKD_CLASSES
 	
-	daemon
-	service
+    #daemon
 	service-handler
 	service-proxy
+    static-service-proxy
+    routine-service-proxy
 )
 
 set(ZFKD_UTILITIES
 	
-	dbus-handler
-	config-handler
-	locked-storage	
+    #dbus-handler
+    #config-handler
+    #locked-storage	
 )
 
 set(ZFKD_PUBLIC_CLASSES
 	
-	daemon
-	service
+    #daemon
+    #service
 )
 
 set(ZFKD_PUBLIC_UTILITIES
