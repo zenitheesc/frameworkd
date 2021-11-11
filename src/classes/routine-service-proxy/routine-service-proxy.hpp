@@ -3,6 +3,10 @@
 #include <memory>
 
 class RoutineServiceProxy : public ServiceProxy {
+public:
+    RoutineServiceProxy(IService& realService, std::map<std::string, ServiceState::state_t> depsMap);
+    ~RoutineServiceProxy() override = default;
+
 protected:
     friend class ServiceHandler;
     friend class Tester;
@@ -12,7 +16,7 @@ protected:
     public:
         RoutineServiceProxy& m_upperProxy;
 
-        RoutineState(stateT state, RoutineServiceProxy& upperProxy)
+        RoutineState(state_t state, RoutineServiceProxy& upperProxy)
             : m_upperProxy(upperProxy)
             , ServiceState(state)
         {
@@ -64,20 +68,11 @@ protected:
     };
 
     std::thread m_thread;
-    std::unique_ptr<RoutineState> m_status;
     std::mutex m_updateMtx;
 
     void serviceCycle() override;
-    void autoUpdate() override;
-    void changeState(ServiceState::stateT newState) override;
-    auto checkState() -> ServiceState::stateT;
+    void changeState(ServiceState::state_t newState) override;
     void weave();
     void cut();
-
-public:
-    RoutineServiceProxy(IService& realService, std::map<std::string, ServiceState::stateT> depsMap);
-    ~RoutineServiceProxy() override = default;
-
-    auto reportState() -> nlohmann::json override;
 };
 
