@@ -5,18 +5,17 @@
 #include <nlohmann/json.hpp>
 #include <thread>
 
-class ServiceProxy {
+class ServiceProxy { 
 protected:
-
     friend class ServiceHandler;
     friend class Tester;
 
-    enum proxyT { STATIC_SERVICE = 0,
+    enum proxy_t { STATIC_SERVICE = 0,
         ROUTINE_SERVICE };
 
     class ServiceState {
     public:
-        enum stateT { MISSING_DEPENDENCIES = 0,
+        enum state_t { MISSING_DEPENDENCIES = 0,
             UNINITIALIZED,
             RUNNING,
             STOPPED,
@@ -24,14 +23,13 @@ protected:
             STAND_BY,
             UNKNOWN };
 
-        //    protected:
-        const stateT m_state;
+        const state_t m_state;
 
         virtual void somethingIsMissing() { }
         virtual void allFine() { }
-        [[nodiscard]] auto getState() const -> stateT;
+        [[nodiscard]] auto getState() const -> state_t;
 
-        explicit ServiceState(stateT state)
+        explicit ServiceState(state_t state)
             : m_state(state)
         {
         }
@@ -39,44 +37,47 @@ protected:
 
     class ProxyConfigs {
     public:
-        struct Dependencie {
-            ServiceState::stateT m_reqrState;
-            ServiceState::stateT m_currState;
-            Dependencie(ServiceState::stateT reqrState, ServiceState::stateT currState)
+        struct Dependency {
+            ServiceState::state_t m_reqrState;
+            ServiceState::state_t m_currState;
+            Dependency(ServiceState::state_t reqrState, ServiceState::state_t currState)
                 : m_reqrState(reqrState)
                 , m_currState(currState)
             {
             }
 
-            Dependencie() = default;
+            Dependency() = default;
         };
 
-        std::map<std::string, Dependencie> m_depsMap;
+        std::map<std::string, Dependency> m_depsMap;
 
-        void changeDep(std::string dependencieId, ServiceState::stateT currState);
-        explicit ProxyConfigs(std::map<std::string, ServiceState::stateT> depsMap);
+        void changeDep(std::string dependencieId, ServiceState::state_t currState);
+        explicit ProxyConfigs(std::map<std::string, ServiceState::state_t> depsMap);
     };
 
-    proxyT m_proxyType;
-    std::mutex m_statusMtx;
+    proxy_t m_proxyType;
+    std::mutex m_stateMtx;
+    IService& m_realService;
     ProxyConfigs m_proxyConfigs;
     std::string m_realServiceId;
-    IService& m_realService;
+    std::unique_ptr<ServiceState> m_state;
 
-    virtual void changeState(ServiceState::stateT newState) { }
-    virtual void autoUpdate() { }
+    auto checkState() -> ServiceState::state_t;
+
+    virtual void autoUpdate();
     virtual void serviceCycle() { }
+    virtual void changeState(ServiceState::state_t newState) { }
 
 public:
-    virtual auto reportState() -> nlohmann::json { return { {} }; }
-
-    ServiceProxy(IService& realService, proxyT proxyType, std::map<std::string, ServiceState::stateT> depsMap)
+    ServiceProxy(IService& realService, proxy_t proxyType, std::map<std::string, ServiceState::state_t> depsMap)
         : m_realService(realService)
         , m_proxyType(proxyType)
         , m_proxyConfigs(depsMap)
         , m_realServiceId(realService.m_serviceId)
     {
     }
+
+    virtual auto reportState() -> nlohmann::json;
 
     virtual ~ServiceProxy() = default;
 };
