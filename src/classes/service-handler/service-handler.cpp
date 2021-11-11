@@ -3,12 +3,12 @@
 ServiceHandler::ServiceHandler(nlohmann::json servicesConfigs)
 {
     for(auto& [serviceId, dependencies] : servicesConfigs["proxys"].items()) {
-        std::map<std::string, ServiceProxy::ServiceState::stateT> depsMap;
+        std::map<std::string, ServiceProxy::ServiceState::state_t> depsMap;
 
         for(auto& [dependencyId, currState] : dependencies.items()) {
-            depsMap.emplace(std::pair<std::string, ServiceProxy::ServiceState::stateT>(dependencyId, currState));
+            depsMap.emplace(std::pair<std::string, ServiceProxy::ServiceState::state_t>(dependencyId, currState));
         }
-        m_proxyDepsMap.emplace(std::pair<std::string, std::map<std::string, ServiceProxy::ServiceState::stateT>>(serviceId, depsMap));
+        m_proxyDepsMap.emplace(std::pair<std::string, std::map<std::string, ServiceProxy::ServiceState::state_t>>(serviceId, depsMap));
     }
 }
 
