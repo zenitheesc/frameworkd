@@ -1,16 +1,11 @@
-
 #pragma once
-#include <iostream>
+
 #include <string>
+
 class IService {
 public:
-    /* Id of the service */
     std::string m_serviceId;
 
-protected:
-    //	DBusHandler::DBusHandler m_dbus;
-
-public:
   /**
    * @brief	An interface function to be implemented by
    * 		the user to make the "setup"/configuration
@@ -41,11 +36,8 @@ public:
    * @param serviceId std::string that is the id related
    * 		to the instantiated class.
    */
-
     explicit IService(std::string serviceId)
-        : m_serviceId { serviceId }
-    {
-    }
+        : m_serviceId { serviceId } {};
 
   /**
    * @brief	A virtual destructor to ensure
@@ -57,9 +49,7 @@ public:
 class StaticService : public IService {
 public:
     explicit StaticService(std::string serviceId)
-        : IService(serviceId)
-    {
-    }
+        : IService { serviceId } {};
 
     void routine() final { }
 
@@ -69,9 +59,7 @@ public:
 class RoutineService : public IService {
 public:
     explicit RoutineService(std::string serviceId)
-        : IService(serviceId)
-    {
-    }
+        : IService { serviceId } {};
 
     ~RoutineService() override = default;
 };
