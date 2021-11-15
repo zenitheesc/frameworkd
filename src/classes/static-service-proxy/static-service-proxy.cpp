@@ -1,12 +1,18 @@
 #include "static-service-proxy.hpp"
 
 StaticServiceProxy::StaticServiceProxy(StaticService& realService, std::map<std::string, ServiceState::state_t> depsMap)
-    : m_runnedOnce(false)
-    , ServiceProxy(realService, STATIC_SERVICE, depsMap)
+    : m_runnedOnce { false }
+    , ServiceProxy { realService, STATIC_SERVICE, depsMap }
 {
     changeState(ServiceState::MISSING_DEPENDENCIES);
 }
 
+/*
+ * @brief:  Exposes the static-service on the DBUS and then
+ *          changes m_upperProxy's StaticState to state 
+ *          StandBy if the static-service already had run
+ *          once, or to state Uninitialized if its doesn't.
+ */
 void StaticServiceProxy::MissingDependencies::allFine()
 {
     state_t newState = (m_upperProxy.m_runnedOnce) ? STAND_BY : UNINITIALIZED;
@@ -14,17 +20,23 @@ void StaticServiceProxy::MissingDependencies::allFine()
     m_upperProxy.changeState(newState);
 }
 
-// Uninitialized and StandBy Constructor will expose the endpoint on the DBUS
-
+/*
+ * @brief:  Hides the static-service from the DBUS and then
+ *          changes m_upperProxy's StaticState to state 
+ *          MissingDependencies.
+ */
 void StaticServiceProxy::Uninitialized::somethingIsMissing()
 {
-    // Unexpose/Hide the endpoint on the DBUS and THEN..
     m_upperProxy.changeState(ServiceState::MISSING_DEPENDENCIES);
 }
 
+/*
+ * @brief:  Hides the static-service from the DBUS and then
+ *          changes m_upperProxy's StaticState to state 
+ *          MissingDependencies.
+ */
 void StaticServiceProxy::StandBy::somethingIsMissing()
 {
-    // Unexpose/Hide the endpoint on the DBUS and THEN...
     m_upperProxy.changeState(ServiceState::MISSING_DEPENDENCIES);
 }
 
@@ -38,7 +50,7 @@ void StaticServiceProxy::StaticServiceProxy::serviceCycle()
 
 void StaticServiceProxy::StaticServiceProxy::changeState(ServiceState::state_t newState)
 {
-    const std::lock_guard<std::mutex> lock(m_stateMtx);
+    const std::lock_guard<std::mutex> lock { m_stateMtx };
 
     switch (newState) {
     case ServiceState::MISSING_DEPENDENCIES:
@@ -54,7 +66,9 @@ void StaticServiceProxy::StaticServiceProxy::changeState(ServiceState::state_t n
         m_state = std::make_unique<StandBy>(*this);
         break;
     default:
-        throw std::logic_error("Static Services should not have other States!");
+        std::string errorMessage = "Unknown State! State Read = ";
+        errorMessage.append(std::to_string(newState));
+        throw std::logic_error(errorMessage);
     }
 }
 
