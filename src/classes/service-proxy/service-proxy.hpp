@@ -5,10 +5,9 @@
 #include <nlohmann/json.hpp>
 #include <thread>
 
-class ServiceProxy { 
+class ServiceProxy {
 protected:
     friend class ServiceHandler;
-    friend class Tester;
 
     enum proxy_t { STATIC_SERVICE = 0,
         ROUTINE_SERVICE };
@@ -26,14 +25,11 @@ protected:
         const state_t m_state;
 
         explicit ServiceState(state_t state)
-            : m_state(state)
-        {
-        }
+            : m_state { state } {};
 
         virtual void somethingIsMissing() { }
         virtual void allFine() { }
         [[nodiscard]] auto getState() const -> state_t;
-
     };
 
     class ProxyConfigs {
@@ -41,12 +37,10 @@ protected:
         struct Dependency {
             ServiceState::state_t m_reqrState;
             ServiceState::state_t m_currState;
-            
+
             Dependency(ServiceState::state_t reqrState, ServiceState::state_t currState)
-                : m_reqrState(reqrState)
-                , m_currState(currState)
-            {
-            }
+                : m_reqrState { reqrState }
+                , m_currState { currState } {};
 
             Dependency() = default;
         };
@@ -72,12 +66,10 @@ protected:
 
 public:
     ServiceProxy(IService& realService, proxy_t proxyType, std::map<std::string, ServiceState::state_t> depsMap)
-        : m_realService(realService)
-        , m_proxyType(proxyType)
-        , m_proxyConfigs(depsMap)
-        , m_realServiceId(realService.m_serviceId)
-    {
-    }
+        : m_realService { realService }
+        , m_proxyType { proxyType }
+        , m_proxyConfigs { depsMap }
+        , m_realServiceId { realService.m_serviceId } {};
 
     virtual auto reportState() -> nlohmann::json;
 

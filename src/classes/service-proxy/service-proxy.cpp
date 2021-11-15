@@ -1,5 +1,4 @@
 #include "service-proxy.hpp"
-#include <iostream>
 
 ServiceProxy::ProxyConfigs::ProxyConfigs(std::map<std::string, ServiceState::state_t> depsMap)
 {
@@ -31,7 +30,6 @@ void ServiceProxy::ServiceProxy::autoUpdate()
 
     if (noMissingDependencies) {
         m_state->allFine();
-
     } else {
         m_state->somethingIsMissing();
     }
@@ -39,19 +37,17 @@ void ServiceProxy::ServiceProxy::autoUpdate()
 
 auto ServiceProxy::ServiceProxy::checkState() -> ServiceState::state_t
 {
-    const std::lock_guard<std::mutex> lock(m_stateMtx);
+    const std::lock_guard<std::mutex> lock { m_stateMtx };
     return m_state->getState();
 }
 
 auto ServiceProxy::ServiceProxy::reportState() -> nlohmann::json
 {
-    ServiceState::state_t currStatus = checkState();
-
-    return (nlohmann::json) { { "serviceId", m_realServiceId }, { "State", currStatus } };
+    return (nlohmann::json) { { "serviceId", m_realServiceId }, { "State", checkState() } };
 }
 
 void ServiceProxy::ProxyConfigs::changeDep(std::string dependencieId, ServiceState::state_t currState)
 {
-    m_depsMap[dependencieId].m_currState = currState;
+    m_depsMap.at(dependencieId).m_currState = currState;
 }
 
