@@ -1,20 +1,26 @@
 #include "routine-service-proxy.hpp"
 
 RoutineServiceProxy::RoutineServiceProxy(RoutineService& realService, std::map<std::string, ServiceState::state_t> depsMap)
-    : ServiceProxy(realService, ROUTINE_SERVICE, depsMap)
+    : ServiceProxy { realService, ROUTINE_SERVICE, depsMap }
 {
     changeState(ServiceState::MISSING_DEPENDENCIES);
 }
 
+/**
+ * @brief:  Exposes the routine-service from the DBUS and then 
+ *          calls m_upperProxy's method weave.
+ */
 void RoutineServiceProxy::MissingDependencies::allFine()
 {
-    // Expose/Hide the endpoint on the DBUS and THEN..
     m_upperProxy.weave();
 }
 
+/**
+ * @brief:  Hides the routine-service from the DBUS and then calls 
+ *          the m_upperProxy's method cut.
+ */
 void RoutineServiceProxy::Running::somethingIsMissing()
 {
-    // Unexpose/Hide the endpoint on the DBUS and THEN..
     m_upperProxy.cut();
 }
 
@@ -35,7 +41,7 @@ void RoutineServiceProxy::serviceCycle()
 
 void RoutineServiceProxy::weave()
 {
-    const std::lock_guard<std::mutex> lock(m_updateMtx);
+    const std::lock_guard<std::mutex> lock { m_updateMtx };
     changeState(ServiceState::STAND_BY);
     std::thread thread(&RoutineServiceProxy::serviceCycle, this);
     std::swap(thread, m_thread);
@@ -43,7 +49,7 @@ void RoutineServiceProxy::weave()
 
 void RoutineServiceProxy::cut()
 {
-    const std::lock_guard<std::mutex> lock(m_updateMtx);
+    const std::lock_guard<std::mutex> lock { m_updateMtx };
     changeState(ServiceState::STOPPED);
     m_thread.join();
     changeState(ServiceState::MISSING_DEPENDENCIES);
@@ -51,7 +57,7 @@ void RoutineServiceProxy::cut()
 
 void RoutineServiceProxy::changeState(ServiceState::state_t newState)
 {
-    const std::lock_guard<std::mutex> lock(m_stateMtx);
+    const std::lock_guard<std::mutex> lock { m_stateMtx };
 
     switch (newState) {
     case ServiceState::MISSING_DEPENDENCIES:
@@ -70,7 +76,9 @@ void RoutineServiceProxy::changeState(ServiceState::state_t newState)
         m_state = std::make_unique<Finished>(*this);
         break;
     default:
-        throw std::logic_error("Routine Services should not have other States!");
+        std::string errorMessage = "Unknown State! State Read = ";
+        errorMessage.append(std::to_string(newState));
+        throw std::logic_error(errorMessage);
     }
 }
 

@@ -9,7 +9,9 @@ public:
 
 protected:
     friend class ServiceHandler;
-    friend class Tester;
+
+    std::thread m_thread;
+    std::mutex m_updateMtx;
 
     class RoutineState : public ServiceState {
 
@@ -17,18 +19,14 @@ protected:
         RoutineServiceProxy& m_upperProxy;
 
         RoutineState(state_t state, RoutineServiceProxy& upperProxy)
-            : m_upperProxy(upperProxy)
-            , ServiceState(state)
-        {
-        }
+            : m_upperProxy { upperProxy }
+            , ServiceState { state } {};
     };
 
     class MissingDependencies : public RoutineState {
     public:
         explicit MissingDependencies(RoutineServiceProxy& upperProxy)
-            : RoutineState(MISSING_DEPENDENCIES, upperProxy)
-        {
-        }
+            : RoutineState { MISSING_DEPENDENCIES, upperProxy } {};
 
         void allFine() override;
     };
@@ -36,17 +34,13 @@ protected:
     class StandBy : public RoutineState {
     public:
         explicit StandBy(RoutineServiceProxy& upperProxy)
-            : RoutineState(STAND_BY, upperProxy)
-        {
-        }
+            : RoutineState { STAND_BY, upperProxy } {};
     };
 
     class Running : public RoutineState {
     public:
         explicit Running(RoutineServiceProxy& upperProxy)
-            : RoutineState(RUNNING, upperProxy)
-        {
-        }
+            : RoutineState { RUNNING, upperProxy } {};
 
         void somethingIsMissing() override;
     };
@@ -54,21 +48,14 @@ protected:
     class Stopped : public RoutineState {
     public:
         explicit Stopped(RoutineServiceProxy& upperProxy)
-            : RoutineState(STOPPED, upperProxy)
-        {
-        }
+            : RoutineState { STOPPED, upperProxy } {};
     };
 
     class Finished : public RoutineState {
     public:
         explicit Finished(RoutineServiceProxy& upperProxy)
-            : RoutineState(FINISHED, upperProxy)
-        {
-        }
+            : RoutineState { FINISHED, upperProxy } {};
     };
-
-    std::thread m_thread;
-    std::mutex m_updateMtx;
 
     void serviceCycle() override;
     void changeState(ServiceState::state_t newState) override;
