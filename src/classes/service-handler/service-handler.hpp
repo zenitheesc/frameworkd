@@ -13,8 +13,6 @@ public:
     explicit ServiceHandler(nlohmann::json servicesConfigs);
 
 protected:
-    friend class Tester;
-
     std::map<std::string, std::unique_ptr<ServiceProxy>> m_serviceMap;
     std::map<std::string, std::map<std::string, ServiceProxy::ServiceState::state_t>> m_proxyDepsMap;
 
