@@ -46,24 +46,23 @@ endmacro(ZFKD_CREATE_DICT)
 #------------------
 
 set(ZFKD_CLASSES
-	
-	daemon
-	service
-	service-handler
-	service-proxy
+    
+    daemon
+    service-handler
+    service-proxy
+    static-service-proxy
+    routine-service-proxy
 )
 
 set(ZFKD_UTILITIES
-	
-	dbus-handler
-	config-handler
-	locked-storage	
+
+    dbus-handler
+    config-handler
+    locked-storage
 )
 
 set(ZFKD_PUBLIC_CLASSES
-	
-	daemon
-	service
+    daemon
 )
 
 set(ZFKD_PUBLIC_UTILITIES
@@ -206,8 +205,7 @@ endif()
 #        It will persist until the maintainer solve problems with outside inclusion by "include_subdirectory" mode.
 #
 #
-#add_executable(sample ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
-
-#target_link_libraries(sample ${CONAN_LIBS} frameworkd)
+# add_executable(sample ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp)
+# target_link_libraries(sample ${CONAN_LIBS} frameworkd)
 
 
