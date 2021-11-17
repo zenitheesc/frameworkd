@@ -158,12 +158,14 @@ include(cmake/Doxygen.cmake)
 
 # Identify and link with the specific "packages" the project uses
 find_package(sdbus-c++ REQUIRED)
+find_package(nlohmann_json REQUIRED)
 target_link_libraries(
   ${PROJECT_NAME}
 #  PUBLIC
 #    dependency1 ...
   PRIVATE
 	SDBusCpp::sdbus-c++
+	nlohmann_json::nlohmann_json
 #    ${PROJECT_NAME}_PROJECT_OPTIONS
 #    ${PROJECT_NAME}_PROJECT_WARNINGS
 )
