@@ -157,16 +157,16 @@ include(cmake/Doxygen.cmake)
 #
 
 # Identify and link with the specific "packages" the project uses
-#find_package(package_name package_version REQUIRED package_type [other_options])
-#target_link_libraries(
-#  ${PROJECT_NAME}
+find_package(sdbus-c++ REQUIRED)
+target_link_libraries(
+  ${PROJECT_NAME}
 #  PUBLIC
 #    dependency1 ...
-#  PRIVATE
-#    dependency2 ...
+  PRIVATE
+	SDBusCpp::sdbus-c++
 #    ${PROJECT_NAME}_PROJECT_OPTIONS
 #    ${PROJECT_NAME}_PROJECT_WARNINGS
-#)
+)
 #if(${PROJECT_NAME}_BUILD_EXECUTABLE AND ${PROJECT_NAME}_ENABLE_UNIT_TESTING)
 #  target_link_libraries(
 #    ${PROJECT_NAME}_LIB
