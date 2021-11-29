@@ -28,7 +28,17 @@ void ServiceHandler::buildServiceProxy(RoutineService& userService)
 
 auto ServiceHandler::getProxyState(std::string serviceId) -> nlohmann::json
 {
-    nlohmann::json requiredState = m_serviceMap.at(serviceId)->reportState();
+    nlohmann::json requiredState;
+
+    try {
+        requiredState = m_serviceMap.at(serviceId)->reportState();
+    } catch (const std::out_of_range) {
+        std::string errorMessage = "Get dependency state request from a not built service! Unknown Service = ";
+        errorMessage.append(serviceId);
+
+        throw std::invalid_argument(errorMessage);
+    }
+
     return requiredState;
 }
 
@@ -41,6 +51,41 @@ auto ServiceHandler::getAllProxyState() -> nlohmann::json
     }
 
     return allStates;
+}
+
+void ServiceHandler::changeDependencyState(std::string serviceId, std::string dependencyId, ServiceProxy::ServiceState::state_t newState)
+{
+    if (dependencyId == "THIS") {
+        throw std::invalid_argument("THIS is a specially reserved dependency and don't accept outside changes of its state");
+    }
+
+    try {
+        m_serviceMap.at(serviceId)->m_proxyConfigs.changeDep(dependencyId, newState);
+    } catch (const std::out_of_range) {
+        std::string errorMessage = "Change dependency state request from a not built service! Unknown Service = ";
+        errorMessage.append(serviceId);
+
+        throw std::invalid_argument(errorMessage);
+    }
+}
+
+void ServiceHandler::updateServiceProxy(std::string serviceId)
+{
+    try {
+        m_serviceMap.at(serviceId)->autoUpdate();
+    } catch (const std::out_of_range) {
+        std::string errorMessage = "Update request from a not built service! Unknown Service = ";
+        errorMessage.append(serviceId);
+
+        throw std::invalid_argument(errorMessage);
+    }
+}
+
+void ServiceHandler::updateAllServiceProxys()
+{
+    for (auto& [serviceId, proxy] : m_serviceMap) {
+        proxy->autoUpdate();
+    }
 }
 
 void ServiceHandler::run()
