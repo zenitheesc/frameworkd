@@ -6,7 +6,7 @@
 #include <thread>
 
 class ServiceProxy {
-protected:
+public:
     friend class ServiceHandler;
 
     enum proxy_t { STATIC_SERVICE = 0,
@@ -31,7 +31,7 @@ protected:
         virtual void allFine() { }
         [[nodiscard]] auto getState() const -> state_t;
     };
-
+protected:
     class ProxyConfigs {
     public:
         struct Dependency {
