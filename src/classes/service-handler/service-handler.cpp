@@ -28,18 +28,13 @@ void ServiceHandler::buildServiceProxy(RoutineService& userService)
 
 auto ServiceHandler::getProxyState(std::string serviceId) -> nlohmann::json
 {
-    nlohmann::json requiredState;
-
     try {
-        requiredState = m_serviceMap.at(serviceId)->reportState();
+        return m_serviceMap.at(serviceId)->reportState();
     } catch (const std::out_of_range) {
-        std::string errorMessage = "Get dependency state request from a not built service! Unknown Service = ";
-        errorMessage.append(serviceId);
+        std::string errorMessage = "Get dependency state request from a not built service! Unknown Service = " + serviceId;
 
         throw std::invalid_argument(errorMessage);
     }
-
-    return requiredState;
 }
 
 auto ServiceHandler::getAllProxyState() -> nlohmann::json
@@ -62,8 +57,7 @@ void ServiceHandler::changeDependencyState(std::string serviceId, std::string de
     try {
         m_serviceMap.at(serviceId)->m_proxyConfigs.changeDep(dependencyId, newState);
     } catch (const std::out_of_range) {
-        std::string errorMessage = "Change dependency state request from a not built service! Unknown Service = ";
-        errorMessage.append(serviceId);
+        std::string errorMessage = "Change dependency state request from a not built service! Unknown Service = " + serviceId;
 
         throw std::invalid_argument(errorMessage);
     }
@@ -74,8 +68,7 @@ void ServiceHandler::updateServiceProxy(std::string serviceId)
     try {
         m_serviceMap.at(serviceId)->autoUpdate();
     } catch (const std::out_of_range) {
-        std::string errorMessage = "Update request from a not built service! Unknown Service = ";
-        errorMessage.append(serviceId);
+        std::string errorMessage = "Update request from a not built service! Unknown Service = " + serviceId;
 
         throw std::invalid_argument(errorMessage);
     }
