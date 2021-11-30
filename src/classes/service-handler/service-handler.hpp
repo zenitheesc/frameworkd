@@ -6,6 +6,7 @@
 #include <map>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <stdexcept>
 #include <string>
 
 class ServiceHandler {
@@ -21,6 +22,9 @@ public:
     auto getAllProxyState() -> nlohmann::json;
     void buildServiceProxy(StaticService& userService);
     void buildServiceProxy(RoutineService& userService);
+    void changeDependencyState(std::string serviceId, std::string dependencyId, ServiceProxy::ServiceState::state_t newState);
+    void updateServiceProxy(std::string serviceId);
+    void updateAllServiceProxys();
     void run();
 };
 
