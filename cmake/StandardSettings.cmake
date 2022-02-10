@@ -25,10 +25,9 @@ option(${PROJECT_NAME}_USE_GOOGLE_MOCK "Use the GoogleMock project for extending
 #
 # Static analyzers
 #
-# Currently supporting: Clang-Tidy, Cppcheck.
+# Currently supporting: Clang-Tidy.
 
 option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable static analysis with Clang-Tidy." OFF)
-option(${PROJECT_NAME}_ENABLE_CPPCHECK "Enable static analysis with Cppcheck." OFF)
 
 #
 # Code coverage
