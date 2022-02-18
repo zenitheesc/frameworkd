@@ -46,7 +46,7 @@ void ConfigHandler::read(const std::string& fileName)
 
 /**
  * @brief Gets a value from the json object
- * @param field Field to get the value 
+ * @param field Field to get the value
  */
 auto ConfigHandler::getConfig(const std::string& field) const -> const nlohmann::json
 {
@@ -59,4 +59,9 @@ auto ConfigHandler::getConfig(const std::string& field) const -> const nlohmann:
 auto ConfigHandler::operator[](const std::string& field) const -> const nlohmann::json
 {
     return getConfig(field);
+}
+
+auto ConfigHandler::getAllConfig() const -> const nlohmann::json
+{
+    return m_config;
 }
