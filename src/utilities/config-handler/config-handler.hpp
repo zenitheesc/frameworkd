@@ -14,6 +14,7 @@ public:
     void read(const std::string& fileName);
     void read();
     auto operator[](const std::string& field) const -> const nlohmann::json;
+    auto getAllConfig() const -> const nlohmann::json;
 
 private:
     [[nodiscard]] auto getConfig(const std::string& field) const -> const nlohmann::json;
