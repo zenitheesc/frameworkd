@@ -1,7 +1,0 @@
-[requires]
-nlohmann_json/3.10.2
-sdbus-cpp/0.8.3
-gtest/cci.20210126
-
-[generators]
-cmake
