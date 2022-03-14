@@ -24,12 +24,12 @@ public:
 
         Path() = default;
 
-        Path(const std::string& service, const std::string& objectPath, const std::string& interface,
-            const std::string& functionality)
-            : service { std::move(service) }
-            , objectPath { std::move(objectPath) }
-            , interface { std::move(interface) }
-            , functionality { std::move(functionality) }
+        Path(const std::string& serviceName, const std::string& serviceObjectPath, const std::string& serviceInterface,
+            const std::string& serviceFunctionality)
+            : service { std::move(serviceName) }
+            , objectPath { std::move(serviceObjectPath) }
+            , interface { std::move(serviceInterface) }
+            , functionality { std::move(serviceFunctionality) }
         {
             if (service.empty() || objectPath.empty() || interface.empty() || functionality.empty()) {
                 throw std::invalid_argument("Invalid path: empty string doesn't satisfies path format");
@@ -38,49 +38,49 @@ public:
     };
 
 private:
-    std::string m_serviceName;
-    bool m_started;
-    bool m_isServer;
+    static std::string s_serviceName;
+    static bool s_started;
+    static bool s_isServer;
 
-    std::unique_ptr<sdbus::IConnection> m_connection;
+    static std::unique_ptr<sdbus::IConnection> s_connection;
 
-    DBusObjectMap m_DBusObjects;
-    DBusProxyMap m_DBusProxys;
+    static DBusObjectMap s_DBusObjects;
+    static DBusProxyMap s_DBusProxys;
 
-    auto findProxy(const DBusHandler::Path& path) -> sdbus::IProxy*;
+    static auto findProxy(const DBusHandler::Path& path) -> sdbus::IProxy*;
 
-    auto findObject(const DBusHandler::Path& path) -> sdbus::IObject*;
+    static auto findObject(const DBusHandler::Path& path) -> sdbus::IObject*;
 
 public:
-    DBusHandler();
+    static void start();
 
-    explicit DBusHandler(const std::string& serviceName);
+    static void start(const std::string& serviceName);
 
-    DBusHandler(const std::string& serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys);
+    static void start(const std::string& serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys);
 
-    DBusHandler(const std::string& serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys,
+    static void start(const std::string& serviceName, DBusObjectMap DBusObjects, DBusProxyMap DBusProxys,
         std::unique_ptr<sdbus::IConnection> connection);
 
-    void registerMethod(const DBusHandler::Path& path, DBusCallback&& callback);
+    static void registerMethod(const DBusHandler::Path& path, DBusCallback&& callback);
 
-    void subscribeToSignal(const DBusHandler::Path& path, DBusVoidCallback&& callback);
+    static void subscribeToSignal(const DBusHandler::Path& path, DBusVoidCallback&& callback);
 
-    void registerSignal(const DBusHandler::Path& path);
+    static void registerSignal(const DBusHandler::Path& path);
 
-    auto callMethod(const DBusHandler::Path& path, nlohmann::json arg) -> nlohmann::json;
+    static auto callMethod(const DBusHandler::Path& path, nlohmann::json arg) -> nlohmann::json;
 
-    void callMethodAsync(const DBusHandler::Path& path, nlohmann::json arg, DBusVoidCallback&& callback);
+    static void callMethodAsync(const DBusHandler::Path& path, nlohmann::json arg, DBusVoidCallback&& callback);
 
-    void emitSignal(const DBusHandler::Path& path, nlohmann::json arg);
+    static void emitSignal(const DBusHandler::Path& path, nlohmann::json arg);
 
-    void exposeProperty(const DBusHandler::Path& path, std::function<nlohmann::json()>&& getter,
+    static void exposeProperty(const DBusHandler::Path& path, std::function<nlohmann::json()>&& getter,
         DBusVoidCallback&& setter);
 
-    auto getProperty(const DBusHandler::Path& path) -> nlohmann::json;
+    static auto getProperty(const DBusHandler::Path& path) -> nlohmann::json;
 
-    void getProperty(const DBusHandler::Path& path, DBusVoidCallback&& callback);
+    static void getProperty(const DBusHandler::Path& path, DBusVoidCallback&& callback);
 
-    void setProperty(const DBusHandler::Path& path, nlohmann::json arg);
+    static void setProperty(const DBusHandler::Path& path, nlohmann::json arg);
 
-    void finish();
+    static void finish();
 };
