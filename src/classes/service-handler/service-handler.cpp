@@ -85,6 +85,7 @@ void ServiceHandler::run()
 {
     for (auto& [serviceId, proxy] : m_serviceMap) {
         proxy->m_proxyConfigs.changeDep("THIS", ServiceProxy::ServiceState::RUNNING);
+        proxy->configure();
         proxy->autoUpdate();
     }
 }

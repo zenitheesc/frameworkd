@@ -31,6 +31,7 @@ public:
         virtual void allFine() { }
         [[nodiscard]] auto getState() const -> state_t;
     };
+
 protected:
     class ProxyConfigs {
     public:
@@ -59,6 +60,7 @@ protected:
     std::unique_ptr<ServiceState> m_state;
 
     auto checkState() -> ServiceState::state_t;
+    void configure();
 
     virtual void autoUpdate();
     virtual void serviceCycle() { }

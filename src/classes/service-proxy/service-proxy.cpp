@@ -51,3 +51,7 @@ void ServiceProxy::ProxyConfigs::changeDep(std::string dependencieId, ServiceSta
     m_depsMap.at(dependencieId).m_currState = currState;
 }
 
+void ServiceProxy::configure()
+{
+    m_realService.setup();
+}

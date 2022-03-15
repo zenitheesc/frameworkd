@@ -27,7 +27,6 @@ void RoutineServiceProxy::Running::somethingIsMissing()
 void RoutineServiceProxy::serviceCycle()
 {
     changeState(ServiceState::RUNNING);
-    m_realService.setup();
 
     while (checkState() != ServiceState::STOPPED) {
 
