@@ -1,8 +1,12 @@
 #include "config-handler.hpp"
+#include <iostream>
+
+nlohmann::json ConfigHandler::m_config;
 
 ConfigHandler::ConfigHandler(const std::string& fileName)
     : m_fileName(fileName)
 {
+    read();
 }
 
 /**
@@ -11,8 +15,8 @@ ConfigHandler::ConfigHandler(const std::string& fileName)
 void ConfigHandler::validateConfig()
 {
     for (const auto& it : m_requiredFields) {
-        if (!m_config.contains(it)) {
-            throw std::runtime_error("Config file dosen't have all the required fields");
+        if (!ConfigHandler::m_config.contains(it)) {
+            throw std::runtime_error("Config file doesn't have all the required fields");
         }
     }
 }
@@ -24,10 +28,10 @@ void ConfigHandler::read()
 {
     std::ifstream file(m_fileName);
     if (!file.is_open()) {
-        throw std::invalid_argument("File not found");
+        throw std::invalid_argument("Configuration file not found");
     }
 
-    file >> m_config;
+    file >> ConfigHandler::m_config;
 
     validateConfig();
 
@@ -50,7 +54,7 @@ void ConfigHandler::read(const std::string& fileName)
  */
 auto ConfigHandler::getConfig(const std::string& field) const -> const nlohmann::json
 {
-    return m_config[field];
+    return ConfigHandler::m_config[field];
 }
 
 /**

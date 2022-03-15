@@ -6,7 +6,7 @@ private:
     static nlohmann::json m_config;
     std::string m_fileName;
     const std::vector<std::string> m_requiredFields {
-        "data", "services", "serviceId"
+        "data", "proxys", "serviceId"
     };
 
 public:
