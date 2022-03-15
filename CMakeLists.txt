@@ -10,6 +10,7 @@ project(
   LANGUAGES CXX
 )
 
+string(APPEND CMAKE_CXX_FLAGS " -pthread")
 #
 # Set project options
 #
