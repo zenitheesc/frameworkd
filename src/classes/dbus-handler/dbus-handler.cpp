@@ -1,22 +1,31 @@
 #include "dbus-handler.hpp"
 
-DBusHandler::DBusHandler(const std::string& serviceName)
-    : m_isServer { true }
-    , m_serviceName { serviceName }
-{
-    m_connection = sdbus::createSystemBusConnection(serviceName);
+std::string DBusHandler::s_serviceName = "";
+bool DBusHandler::s_started = false;
+bool DBusHandler::s_isServer = false;
+
+std::unique_ptr<sdbus::IConnection> DBusHandler::s_connection;
+
+DBusHandler::DBusObjectMap  DBusHandler::s_DBusObjects;
+DBusHandler::DBusProxyMap DBusHandler::s_DBusProxys;
+
+void DBusHandler::start(const std::string& serviceName) {
+    s_isServer = true;
+    s_serviceName = "zfkd.dbus." + serviceName;
+    s_connection = sdbus::createSystemBusConnection(s_serviceName);
 }
 
-DBusHandler::DBusHandler()
-    : m_isServer { false } {};
+void DBusHandler::start() {
+    s_isServer = false;
+};
 
 auto DBusHandler::findObject(const DBusHandler::Path& path) -> sdbus::IObject*
 {
     try {
-        return m_DBusObjects.at(path.objectPath).get();
+        return s_DBusObjects.at(path.objectPath).get();
     } catch (std::out_of_range& e) {
-        m_DBusObjects[path.objectPath] = sdbus::createObject(*m_connection, path.objectPath);
-        return m_DBusObjects[path.objectPath].get();
+        s_DBusObjects[path.objectPath] = sdbus::createObject(*s_connection, path.objectPath);
+        return s_DBusObjects[path.objectPath].get();
     }
 }
 
@@ -25,20 +34,20 @@ auto DBusHandler::findProxy(const DBusHandler::Path& path) -> sdbus::IProxy*
     const std::string uniqueId = path.service + path.objectPath;
 
     try {
-        return m_DBusProxys.at(uniqueId).get();
+        return s_DBusProxys.at(uniqueId).get();
     } catch (std::out_of_range& e) {
-        m_DBusProxys[uniqueId] = sdbus::createProxy(path.service, path.objectPath);
-        return m_DBusProxys[uniqueId].get();
+        s_DBusProxys[uniqueId] = sdbus::createProxy(path.service, path.objectPath);
+        return s_DBusProxys[uniqueId].get();
     }
 }
 
 void DBusHandler::registerMethod(const DBusHandler::Path& path, DBusCallback&& callback)
 {
-    if (!m_isServer) {
+    if (!s_isServer) {
         throw std::logic_error("Only servers can register methods");
     }
 
-    if (m_started) {
+    if (s_started) {
         throw std::logic_error("Methods should be register before finishing the handler");
     }
 
@@ -76,11 +85,11 @@ void DBusHandler::subscribeToSignal(const DBusHandler::Path& path, DBusVoidCallb
 
 void DBusHandler::registerSignal(const DBusHandler::Path& path)
 {
-    if (!m_isServer) {
+    if (!s_isServer) {
         throw std::logic_error("Only servers can register signals");
     }
 
-    if (m_started) {
+    if (s_started) {
         throw std::logic_error("register signals is only possible before finishing the handler");
     }
 
@@ -121,11 +130,11 @@ void DBusHandler::callMethodAsync(const DBusHandler::Path& path, nlohmann::json 
 
 void DBusHandler::emitSignal(const DBusHandler::Path& path, nlohmann::json arg)
 {
-    if (!m_isServer) {
+    if (!s_isServer) {
         throw std::logic_error("Only servers can emit signals");
     }
 
-    if (!m_started) {
+    if (!s_started) {
         throw std::logic_error("emit a signal is only possible after finishing the handler");
     }
 
@@ -141,11 +150,11 @@ void DBusHandler::exposeProperty(const DBusHandler::Path& path, std::function<nl
     DBusVoidCallback&& setter)
 {
 
-    if (!m_isServer) {
+    if (!s_isServer) {
         throw std::logic_error("Only servers can expose properties");
     }
 
-    if (m_started) {
+    if (s_started) {
         throw std::logic_error("expose a property is only possible before finishing the handler");
     }
 
@@ -185,17 +194,18 @@ void DBusHandler::setProperty(const DBusHandler::Path& path, nlohmann::json arg)
 
 void DBusHandler::finish()
 {
-    m_started = true;
 
-    for (auto const& object : m_DBusObjects) {
+    s_started = true;
+
+    for (auto const& object : s_DBusObjects) {
         object.second->finishRegistration();
     }
 
-    for (auto const& proxy : m_DBusProxys) {
+    for (auto const& proxy : s_DBusProxys) {
         proxy.second->finishRegistration();
     }
 
-    if (m_isServer) {
-        m_connection->enterEventLoop();
+    if (s_isServer) {
+        s_connection->enterEventLoop();
     }
 }
