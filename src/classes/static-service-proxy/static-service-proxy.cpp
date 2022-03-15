@@ -43,7 +43,6 @@ void StaticServiceProxy::StandBy::somethingIsMissing()
 void StaticServiceProxy::StaticServiceProxy::serviceCycle()
 {
     changeState(ServiceState::RUNNING);
-    m_realService.setup();
     m_realService.destroy();
     changeState(ServiceState::STAND_BY);
 }
