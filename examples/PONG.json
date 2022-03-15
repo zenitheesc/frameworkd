@@ -1,0 +1,9 @@
+{
+	"serviceId": "pong",
+	"proxys": {
+		"PING":{}
+	},
+	"data": {
+		"anything": "anything"
+	}
+}
