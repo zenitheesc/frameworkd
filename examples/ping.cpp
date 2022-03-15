@@ -58,3 +58,12 @@ public:
     {
     }
 };
+
+int main()
+{
+    Daemon newDaemon("PING.json");
+    PingService pingService("PING");
+    newDaemon.deploy(pingService);
+    newDaemon.run();
+    return 0;
+}
