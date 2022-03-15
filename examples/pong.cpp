@@ -45,3 +45,12 @@ public:
     {
     }
 };
+
+int main()
+{
+    Daemon newDaemon("PONG.json");
+    PongService pongService("PONG");
+    newDaemon.deploy(pongService);
+    newDaemon.run();
+    return 0;
+}
