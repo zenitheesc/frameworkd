@@ -26,5 +26,5 @@ set(headers
 )
 
 set(test_sources
-	src/daemon_test.cpp
+	#src/daemon_test.cpp
 )
