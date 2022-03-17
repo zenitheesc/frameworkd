@@ -4,6 +4,7 @@ Daemon::Daemon(const std::string& filePath)
     : m_configHandler(filePath)
     , m_serviceHandler(m_configHandler.getAllConfig())
 {
+    DBusHandler::start(m_configHandler["serviceId"]);
 }
 
 void Daemon::deploy(StaticService& userService)
@@ -19,4 +20,5 @@ void Daemon::deploy(RoutineService& userService)
 void Daemon::run()
 {
     m_serviceHandler.run();
+    DBusHandler::finish();
 }
