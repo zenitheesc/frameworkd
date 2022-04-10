@@ -14,15 +14,15 @@ set(exe_sources
 )
 
 set(headers
-	src/utilities/config-handler/config-handler.hpp
-	src/classes/daemon/daemon.hpp
-	src/classes/iservice/iservice.hpp
-	src/classes/static-service-proxy/static-service-proxy.hpp
-	src/classes/locked-storage/locked-storage.hpp
-	src/classes/dbus-handler/dbus-handler.hpp
-	src/classes/service-proxy/service-proxy.hpp
-	src/classes/routine-service-proxy/routine-service-proxy.hpp
-	src/classes/service-handler/service-handler.hpp
+	include/frameworkd/utilities/config-handler/config-handler.hpp
+	include/frameworkd/classes/daemon/daemon.hpp
+	include/frameworkd/classes/iservice/iservice.hpp
+	include/frameworkd/classes/static-service-proxy/static-service-proxy.hpp
+	include/frameworkd/classes/locked-storage/locked-storage.hpp
+	include/frameworkd/classes/dbus-handler/dbus-handler.hpp
+	include/frameworkd/classes/service-proxy/service-proxy.hpp
+	include/frameworkd/classes/routine-service-proxy/routine-service-proxy.hpp
+	include/frameworkd/classes/service-handler/service-handler.hpp
 )
 
 set(test_sources

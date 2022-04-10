@@ -1,4 +1,4 @@
-#include "routine-service-proxy.hpp"
+#include "frameworkd/classes/routine-service-proxy/routine-service-proxy.hpp"
 
 RoutineServiceProxy::RoutineServiceProxy(RoutineService& realService, std::map<std::string, ServiceState::state_t> depsMap)
     : ServiceProxy { realService, ROUTINE_SERVICE, depsMap }
