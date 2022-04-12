@@ -1,4 +1,4 @@
-#include "static-service-proxy.hpp"
+#include "frameworkd/classes/static-service-proxy/static-service-proxy.hpp"
 
 StaticServiceProxy::StaticServiceProxy(StaticService& realService, std::map<std::string, ServiceState::state_t> depsMap)
     : m_runnedOnce { false }
