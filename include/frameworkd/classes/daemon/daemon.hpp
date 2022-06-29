@@ -15,6 +15,8 @@ public:
 
     void getDaemonStatus();
 
+    auto getConfigHandler() -> ConfigHandler;
+
 private:
     ConfigHandler m_configHandler;
     ServiceHandler m_serviceHandler;
