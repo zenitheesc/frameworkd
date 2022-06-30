@@ -22,3 +22,7 @@ void Daemon::run()
     m_serviceHandler.run();
     DBusHandler::finish();
 }
+
+auto Daemon::getConfigHandler() -> ConfigHandler {
+	return m_configHandler;
+}
