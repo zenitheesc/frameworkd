@@ -28,7 +28,7 @@ void ConfigHandler::read()
 {
     std::ifstream file(m_fileName);
     if (!file.is_open()) {
-        throw std::invalid_argument("Configuration file not found");
+        throw std::invalid_argument("Configuration file '"+ m_fileName + "' not found");
     }
 
     file >> ConfigHandler::m_config;
