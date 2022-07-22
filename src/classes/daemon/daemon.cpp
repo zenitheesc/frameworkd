@@ -1,7 +1,7 @@
 #include "frameworkd/classes/daemon/daemon.hpp"
 
-Daemon::Daemon(const std::string& filePath)
-    : m_configHandler(filePath)
+Daemon::Daemon(const std::string& name)
+    : m_configHandler("/etc/frameworkd/" + name + ".json")
     , m_serviceHandler(m_configHandler.getAllConfig())
 {
     DBusHandler::start(m_configHandler["serviceId"]);
@@ -23,6 +23,7 @@ void Daemon::run()
     DBusHandler::finish();
 }
 
-auto Daemon::getConfigHandler() -> ConfigHandler {
-	return m_configHandler;
+auto Daemon::getConfigHandler() -> ConfigHandler
+{
+    return m_configHandler;
 }
