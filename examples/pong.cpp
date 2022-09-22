@@ -1,4 +1,4 @@
-#include "../src/classes/daemon/daemon.hpp"
+#include <frameworkd/classes/daemon/daemon.hpp>
 #include <iostream>
 
 class PongService : public StaticService {
@@ -48,8 +48,8 @@ public:
 
 int main()
 {
-    Daemon newDaemon("PONG.json");
-    PongService pongService("PONG");
+    Daemon newDaemon("pong");
+    PongService pongService("pong");
     newDaemon.deploy(pongService);
     newDaemon.run();
     return 0;
