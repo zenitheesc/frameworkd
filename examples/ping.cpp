@@ -1,4 +1,4 @@
-#include "../src/classes/daemon/daemon.hpp"
+#include <frameworkd/classes/daemon/daemon.hpp>
 #include <iostream>
 
 class PingService : public RoutineService {
@@ -61,8 +61,8 @@ public:
 
 int main()
 {
-    Daemon newDaemon("PING.json");
-    PingService pingService("PING");
+    Daemon newDaemon("ping");
+    PingService pingService("ping");
     newDaemon.deploy(pingService);
     newDaemon.run();
     return 0;
